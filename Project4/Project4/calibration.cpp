@@ -34,6 +34,12 @@ void CameraCalibrator::addChessboardPoints() {
 	for (int i = 0; i<m_filenames.size(); i++) {
 		Mat image = imread(m_filenames[i], CV_LOAD_IMAGE_GRAYSCALE);
 		findChessboardCorners(image, m_borderSize, srcCandidateCorners);
+		/*
+		for (int i = 0; i < srcCandidateCorners.size(); i++) {
+			cout << srcCandidateCorners[i] << " ";
+		}
+		cout << endl;*/
+		cout << srcCandidateCorners.size()<<endl;
 		TermCriteria param(TermCriteria::MAX_ITER + TermCriteria::EPS, 30, 0.1);
 		cornerSubPix(image, srcCandidateCorners, Size(5, 5), Size(-1, -1), param);
 		if (srcCandidateCorners.size() == m_borderSize.area()) {
