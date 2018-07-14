@@ -1,0 +1,5 @@
+﻿  calibration.cpp
+c:\users\user\source\repos\camerac_live_single\camerac_live_single\calibration.h(4): fatal error C1083: 無法開啟包含檔案: 'opencv2/opencv.hpp': No such file or directory
+  main.cpp
+c:\users\user\source\repos\camerac_live_single\camerac_live_single\calibration.h(4): fatal error C1083: 無法開啟包含檔案: 'opencv2/opencv.hpp': No such file or directory
+  正在產生程式碼...

@@ -1,0 +1,3 @@
+﻿  main.cpp
+c:\users\user\source\repos\camerac_live_single\camerac_live_single\main.cpp(113): warning C4244: '引數': 將 'int' 轉換為 'float'，由於類型不同，可能導致資料遺失
+  CameraC_live_single.vcxproj -> C:\Users\USER\source\repos\CameraC_live_single\x64\Debug\CameraC_live_single.exe
