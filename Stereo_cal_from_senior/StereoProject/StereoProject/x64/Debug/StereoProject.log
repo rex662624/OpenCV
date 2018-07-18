@@ -1,10 +1,10 @@
 ﻿  StereoProjectDlg.cpp
-d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(287): warning C4244: '=': 將 'int' 轉換為 'float'，由於類型不同，可能導致資料遺失
-d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(288): warning C4244: '=': 將 'int' 轉換為 'float'，由於類型不同，可能導致資料遺失
-d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(361): warning C4244: '=': 將 'double' 轉換為 'float'，由於類型不同，可能導致資料遺失
-d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(362): warning C4244: '=': 將 'double' 轉換為 'float'，由於類型不同，可能導致資料遺失
-d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(363): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
-d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(368): warning C4244: '=': 將 'double' 轉換為 'float'，由於類型不同，可能導致資料遺失
-d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(369): warning C4244: '=': 將 'double' 轉換為 'float'，由於類型不同，可能導致資料遺失
-d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(370): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(292): warning C4244: '=': 將 'int' 轉換為 'float'，由於類型不同，可能導致資料遺失
+d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(293): warning C4244: '=': 將 'int' 轉換為 'float'，由於類型不同，可能導致資料遺失
+d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(370): warning C4244: '=': 將 'double' 轉換為 'float'，由於類型不同，可能導致資料遺失
+d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(371): warning C4244: '=': 將 'double' 轉換為 'float'，由於類型不同，可能導致資料遺失
+d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(372): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
+d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(377): warning C4244: '=': 將 'double' 轉換為 'float'，由於類型不同，可能導致資料遺失
+d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(378): warning C4244: '=': 將 'double' 轉換為 'float'，由於類型不同，可能導致資料遺失
+d:\專題\7-11\解\stereoproject\stereoproject\stereoprojectdlg.cpp(379): warning C4244: '引數': 將 'float' 轉換為 'int'，由於類型不同，可能導致資料遺失
   StereoProject.vcxproj -> D:\專題\7-11\解\StereoProject\x64\Debug\StereoProject.exe

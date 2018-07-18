@@ -165,7 +165,7 @@ HCURSOR CStereoProjectDlg::OnQueryDragIcon()
 
 //https://blog.csdn.net/lijiayu2015/article/details/53079661
 CvSize imgsize=cvSize(640,512);
-int n_boards= 20; //需要板子數(照片數量!?)
+int n_boards= 5; //需要板子數(照片數量!?)
 int board_w = 4; //版寬點個數
 int board_h = 6; //板高點個數
 int board_n = board_w * board_h;
@@ -175,7 +175,7 @@ int R_corner_count;
 
 CvCapture* caprure;
 IplImage* img;
-CvRect rect_roi;
+CvRect rect_roi;//Region of Interest 感興趣的部分，也就是要從影像中找出棋盤格
 CvMat* mat_roi = cvCreateMat(640, 512,CV_8UC3);
 
 IplImage* L_img;
@@ -186,8 +186,8 @@ IplImage* L_drawlineimg;
 IplImage* R_drawlineimg;
 IplImage* L_gray_img;
 IplImage* R_gray_img;
-CvPoint2D32f* L_corners = new CvPoint2D32f[ board_n ];
-CvPoint2D32f* R_corners = new CvPoint2D32f[ board_n ];
+CvPoint2D32f* L_corners = new CvPoint2D32f[ board_n ];//存左圖的每個點的座標
+CvPoint2D32f* R_corners = new CvPoint2D32f[ board_n ];//存右圖的每個點的座標
 CvMat* L_image_points = cvCreateMat(n_boards*board_n,2,CV_32FC1);
 CvMat* R_image_points = cvCreateMat(n_boards*board_n,2,CV_32FC1);
 CvMat* object_points = cvCreateMat(n_boards*board_n,3,CV_32FC1);
@@ -235,30 +235,33 @@ void CStereoProjectDlg::OnBnClickedButton1()
 		
 		img=cvQueryFrame(caprure);
 		if(!img) break;
+		//因為影片是左右擺在一起，所以要把他切割成一人一半
 		rect_roi = cvRect(0,0,640,512);
-		cvGetSubRect(img, mat_roi, rect_roi);
-		cvGetImage(mat_roi, L_img);
+		cvGetSubRect(img, mat_roi, rect_roi);//要擷取的區域是rect_roi所定義，會把img的rect_roi區域擷取給mat_roi
+		cvGetImage(mat_roi, L_img);//剛剛的 mat_roi還不是圖像 只是矩陣(看type就知道)，所以要把她轉成圖像
+		//上面是left 下面是right
 		rect_roi = cvRect(640,0,640,512);
 		cvGetSubRect(img, mat_roi, rect_roi);
 		cvGetImage(mat_roi, R_img);
+		//----------------------------------------------到這裡取得相機圖像 下面開始找棋盤格
 	
 	if(frame++ % board_dt==0){  //每20個frame取一次
 		
-	//找到chessboard的corner座標並存到corners
+	//找到chessboard的corner座標並存到L_corners/R_corners
 	int L_found = cvFindChessboardCorners(L_img, board_sz, L_corners, &L_corner_count,
-		CV_CALIB_CB_FILTER_QUADS);
+		CV_CALIB_CB_FILTER_QUADS);//重要的是得到 L_corners 也就是棋盤的每個點的座標.
 	int R_found = cvFindChessboardCorners(R_img, board_sz, R_corners, &R_corner_count,
 		CV_CALIB_CB_FILTER_QUADS);
-	//拿到corners的 Subpixel accuracy 
-	L_gray_img = cvCreateImage(imgsize,8,1);//subpixel
+	//拿到corners的 Subpixel accuracy  因為上面的函數只能檢測出一個大略的值，下面是去找更精確的值 用 cvFindCornerSubPix
+	L_gray_img = cvCreateImage(imgsize,8,1);//subpixel 先宣告
 	R_gray_img = cvCreateImage(imgsize,8,1);//subpixel
 	
-	cvCvtColor(L_img,L_gray_img, CV_BGR2GRAY);
+	cvCvtColor(L_img,L_gray_img, CV_BGR2GRAY);//把img轉成灰階，減少彩色干擾
 	cvCvtColor(R_img,R_gray_img, CV_BGR2GRAY);
 	
-	cvFindCornerSubPix(L_gray_img,L_corners,L_corner_count,cvSize(9,6),cvSize(-1,-1),
-		cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
-	cvFindCornerSubPix(R_gray_img,R_corners,R_corner_count,cvSize(9,6),cvSize(-1,-1),
+	cvFindCornerSubPix(L_gray_img,L_corners,L_corner_count,cvSize(board_w, board_h),cvSize(-1,-1),
+		cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));//https://baike.baidu.com/item/cvFindCornerSubPix
+	cvFindCornerSubPix(R_gray_img,R_corners,R_corner_count,cvSize(board_w, board_h),cvSize(-1,-1),
 		cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
 		
 	L_drawimg = cvCloneImage(L_img);//複製一份完整的IplImage資料結構圖形及設定
@@ -274,13 +277,15 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	cvShowImage("L_DrawChessboardCorners", L_drawimg );//將圖片顯示在視窗上
 	cvShowImage("R_DrawChessboardCorners", R_drawimg );//將圖片顯示在視窗上
 	
+	//到這裡找到棋盤座標，而且已經畫在圖上
 	// If we got a good board, add it to our data
 	if( L_corner_count == board_n && R_corner_count == board_n ) {
-		if (successes == 5&&flag==0) { flag = 1; }
+	if (successes == 5&&flag==0) { flag = 1; }//new因為學長的第6個圖案是錯的
 	else{
 	step = successes*board_n;
+	//將corner的座標存入真的要存的地方，L_corners是每次疊代的暫存，L_image_points才是最終儲存的地方
 	for( int k=step, j=0; j<board_n; ++k,++j ) {
-			CV_MAT_ELEM(*L_image_points, float,k,0) = L_corners[j].x;
+			CV_MAT_ELEM(*L_image_points, float,k,0) = L_corners[j].x;//這個函數是想從CvMat獲取元素，參數分別是傳入矩陣/待提取的元素type/要放入哪行/哪列
 			CV_MAT_ELEM(*L_image_points, float,k,1) = L_corners[j].y;
 			CV_MAT_ELEM(*R_image_points, float,k,0) = R_corners[j].x;
 			CV_MAT_ELEM(*R_image_points, float,k,1) = R_corners[j].y;
@@ -308,16 +313,20 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	}//while
 
 	cout<<"chessboard資訊收尋完畢\n\r";
-	
+	//到這裡把棋盤座標存完
+	//先初始化相機的參數矩陣L_intrinsic_matrix，R_intrinsic_matrix
 	CV_MAT_ELEM( *L_intrinsic_matrix, float, 0, 0 ) = 1.0f;
 	CV_MAT_ELEM( *L_intrinsic_matrix, float, 1, 1 ) = 1.0f;
 	CV_MAT_ELEM( *R_intrinsic_matrix, float, 0, 0 ) = 1.0f;
 	CV_MAT_ELEM( *R_intrinsic_matrix, float, 1, 1 ) = 1.0f;
-	
+
+	//主要由棋盤格的點資訊，得到的是內參數 畸變係數 旋轉矩陣(R) 平移向量(T) 本質矩陣(E) 基礎矩陣(F)
 	cvStereoCalibrate(object_points, L_image_points,R_image_points, point_counts,L_intrinsic_matrix, L_distortion_coeffs,
 		R_intrinsic_matrix,R_distortion_coeffs,imgsize,R,T,E,F, CV_CALIB_FIX_ASPECT_RATIO + CV_CALIB_ZERO_TANGENT_DIST + CV_CALIB_SAME_FOCAL_LENGTH,cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5) );
-	cout<<"cvStereoCalibrate完成\n\r";
 	
+	cout<<"cvStereoCalibrate完成\n\r";
+	//用bouguet(P691)
+	//得到的是L_Rrectify, R_Rrectify, L_Prectify, R_Prectify
 	cvStereoRectify(L_intrinsic_matrix, R_intrinsic_matrix,L_distortion_coeffs,R_distortion_coeffs, imgsize,
 		R,T,L_Rrectify, R_Rrectify, L_Prectify, R_Prectify, 0,CV_CALIB_ZERO_DISPARITY);
 	
@@ -325,7 +334,7 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	L_mapy = cvCreateMat( imgsize.height,imgsize.width, CV_32F );
 	R_mapx = cvCreateMat( imgsize.height,imgsize.width, CV_32F );
 	R_mapy = cvCreateMat( imgsize.height,imgsize.width, CV_32F );
-	//Precompute maps for cvRemap()
+	//Precompute maps for cvRemap()開始做P696的所有動作，把參數傳入校正整台相機並輸出矯正後的L_mapx,L_mapy
 	cvInitUndistortRectifyMap(L_intrinsic_matrix,L_distortion_coeffs,L_Rrectify, L_Prectify,L_mapx,L_mapy);
 	cvInitUndistortRectifyMap(R_intrinsic_matrix,R_distortion_coeffs,R_Rrectify, R_Prectify,R_mapx,R_mapy);
 	cout<<"cvInitUndistortRectifyMap完成\n\r";
@@ -333,7 +342,7 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	cvDestroyWindow("L_DrawChessboardCorners");//清除視窗記憶體
 	cvDestroyWindow("R_DrawChessboardCorners");//清除視窗記憶體
 	
-	//Always work in undistorted space
+	//Always work in undistorted space 以下都是為了畫紅線用的(P712)
 	CvMat _L_Rect_image_points=cvMat(1,n_boards*board_n,CV_32FC2,L_corners);
 	CvMat _R_Rect_image_points=cvMat(1,n_boards*board_n,CV_32FC2,R_corners);
 	CvMat* L_Rect_image_points = cvCreateMat(1,n_boards*board_n,CV_32FC2);
@@ -380,7 +389,7 @@ void CStereoProjectDlg::OnBnClickedButton1()
 }
 
 
-
+//-------------------------------------------------disparity map
 
 void CStereoProjectDlg::OnBnClickedButton2()
 {
@@ -401,7 +410,7 @@ void CStereoProjectDlg::OnBnClickedButton2()
 	cvNamedWindow( "rectified",0 );
 	cvResizeWindow("rectified",1280,512);//調整視窗大小
 	while(1){
-		
+		//一樣先獲取frame和切割左右畫面
 		img=cvQueryFrame(caprure);
 		if(!img) break;
 
@@ -446,13 +455,14 @@ void CStereoProjectDlg::OnBnClickedButton2()
 	
 	cvCvtColor( L_img,img1r, CV_BGR2GRAY );
 	cvCvtColor( R_img,img2r, CV_BGR2GRAY );
+	//使用前面計算的L_mapx和L_mapy立體校正圖片，兩個相機的圖片處於同一個相機平面且行對準  用img1r=img1r*矯正的係數
 	cvRemap(img1r, img1r, L_mapx, L_mapy );
 	cvRemap(img2r, img2r, R_mapx, R_mapy );
-	cvFindStereoCorrespondenceBM(img1r,img2r,disp,BMState);
-	cvNormalize( disp, vdisp, 0, 256, CV_MINMAX );
+	cvFindStereoCorrespondenceBM(img1r,img2r,disp,BMState);//輸入左相機img1r 右相機img2r 輸出disparity map 注意左右相機要是單通道 也就是gray
+	cvNormalize( disp, vdisp, 0, 256, CV_MINMAX );//歸一化
 	
-	cvShowImage( "disparity", vdisp );
-			
+	//vShowImage( "disparity", vdisp );
+	//上面是顯示 disparitymap 下面是顯示矯正過後的圖
 	cvGetCols( pair, part, 0, imgsize.width );
 	cvCvtColor(img1r, part, CV_GRAY2BGR );
 	cvGetCols( pair, part, imgsize.width,imgsize.width*2 );
@@ -462,6 +472,7 @@ void CStereoProjectDlg::OnBnClickedButton2()
 
 	cvShowImage( "rectified", pair );
 	
+	//如果P就pause
 	char c =cvWaitKey(100);
 	if(c==32){       //p
 	c=0;
