@@ -161,10 +161,12 @@ HCURSOR CStereoProjectDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
 }
+//----------------------------------------start from here------------------------------------------------------------------
 
-CvSize imgsize=cvSize(640,480);
-int n_boards=10; //需要板子數
-int board_w = 9; //版寬點個數
+//https://blog.csdn.net/lijiayu2015/article/details/53079661
+CvSize imgsize=cvSize(640,512);
+int n_boards= 20; //需要板子數(照片數量!?)
+int board_w = 4; //版寬點個數
 int board_h = 6; //板高點個數
 int board_n = board_w * board_h;
 CvSize board_sz = cvSize( board_w, board_h );
@@ -174,7 +176,7 @@ int R_corner_count;
 CvCapture* caprure;
 IplImage* img;
 CvRect rect_roi;
-CvMat* mat_roi = cvCreateMat(640, 480,CV_8UC3);
+CvMat* mat_roi = cvCreateMat(640, 512,CV_8UC3);
 
 IplImage* L_img;
 IplImage* R_img;
@@ -208,7 +210,7 @@ CvMat* L_mapx ;
 CvMat* L_mapy ;
 CvMat* R_mapx ;
 CvMat* R_mapy ;
-
+int flag = 0;
 void CStereoProjectDlg::OnBnClickedButton1()
 {
 	CString szFileName=0;
@@ -226,17 +228,17 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	//把影像存成圖片~~~~~~~~~~~~~
 	int frame=0;
 	int board_dt=20;
-	L_img = cvCreateImage( cvSize(640,480), IPL_DEPTH_8U, 3);
-	R_img = cvCreateImage( cvSize(640,480), IPL_DEPTH_8U, 3);
+	L_img = cvCreateImage( cvSize(640,512), IPL_DEPTH_8U, 3);
+	R_img = cvCreateImage( cvSize(640,512), IPL_DEPTH_8U, 3);
 
 	while(successes < n_boards){
 		
 		img=cvQueryFrame(caprure);
 		if(!img) break;
-		rect_roi = cvRect(0,0,640,480);
+		rect_roi = cvRect(0,0,640,512);
 		cvGetSubRect(img, mat_roi, rect_roi);
 		cvGetImage(mat_roi, L_img);
-		rect_roi = cvRect(640,0,640,480);
+		rect_roi = cvRect(640,0,640,512);
 		cvGetSubRect(img, mat_roi, rect_roi);
 		cvGetImage(mat_roi, R_img);
 	
@@ -267,13 +269,15 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	
 	cvNamedWindow("L_DrawChessboardCorners",0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
 	cvNamedWindow("R_DrawChessboardCorners",0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
-	cvResizeWindow("L_DrawChessboardCorners",640,480);//調整視窗大小
-	cvResizeWindow("R_DrawChessboardCorners",640,480);//調整視窗大小
+	cvResizeWindow("L_DrawChessboardCorners",640,512);//調整視窗大小
+	cvResizeWindow("R_DrawChessboardCorners",640,512);//調整視窗大小
 	cvShowImage("L_DrawChessboardCorners", L_drawimg );//將圖片顯示在視窗上
 	cvShowImage("R_DrawChessboardCorners", R_drawimg );//將圖片顯示在視窗上
 	
 	// If we got a good board, add it to our data
-	if( L_corner_count == board_n && R_corner_count == board_n  ) {
+	if( L_corner_count == board_n && R_corner_count == board_n ) {
+		if (successes == 5&&flag==0) { flag = 1; }
+	else{
 	step = successes*board_n;
 	for( int k=step, j=0; j<board_n; ++k,++j ) {
 			CV_MAT_ELEM(*L_image_points, float,k,0) = L_corners[j].x;
@@ -288,6 +292,7 @@ void CStereoProjectDlg::OnBnClickedButton1()
 		successes++;
 		cout<<"已獲取"<<successes<<"個圖像資料";
 				}
+	}
 	 } //if 每20個frame取一次
 	
 	char c =cvWaitKey(100);
@@ -310,9 +315,7 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	CV_MAT_ELEM( *R_intrinsic_matrix, float, 1, 1 ) = 1.0f;
 	
 	cvStereoCalibrate(object_points, L_image_points,R_image_points, point_counts,L_intrinsic_matrix, L_distortion_coeffs,
-		R_intrinsic_matrix,R_distortion_coeffs,imgsize,R,T,E,F,
-		cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5),
-		CV_CALIB_FIX_ASPECT_RATIO +	CV_CALIB_ZERO_TANGENT_DIST +CV_CALIB_SAME_FOCAL_LENGTH );
+		R_intrinsic_matrix,R_distortion_coeffs,imgsize,R,T,E,F, CV_CALIB_FIX_ASPECT_RATIO + CV_CALIB_ZERO_TANGENT_DIST + CV_CALIB_SAME_FOCAL_LENGTH,cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5) );
 	cout<<"cvStereoCalibrate完成\n\r";
 	
 	cvStereoRectify(L_intrinsic_matrix, R_intrinsic_matrix,L_distortion_coeffs,R_distortion_coeffs, imgsize,
@@ -369,8 +372,8 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	cout<<"顯示Epipolar lines";
 	cvNamedWindow("L_DrawEpilines",0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
 	cvNamedWindow("R_DrawEpilines",0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
-	cvResizeWindow("L_DrawEpilines",640,480);//調整視窗大小
-	cvResizeWindow("R_DrawEpilines",640,480);//調整視窗大小
+	cvResizeWindow("L_DrawEpilines",640,512);//調整視窗大小
+	cvResizeWindow("R_DrawEpilines",640,512);//調整視窗大小
 	cvShowImage("L_DrawEpilines", L_drawlineimg );//將圖片顯示在視窗上
 	cvShowImage("R_DrawEpilines",R_drawlineimg );//將圖片顯示在視窗上
 	
@@ -394,18 +397,18 @@ void CStereoProjectDlg::OnBnClickedButton2()
 	cout<<"讀取影片完成(空白鍵=pause)"<<"\n\r";
 
 	cvNamedWindow( "disparity",0 );
-	cvResizeWindow("disparity",640,480);//調整視窗大小
+	cvResizeWindow("disparity",640,512);//調整視窗大小
 	cvNamedWindow( "rectified",0 );
-	cvResizeWindow("rectified",1280,480);//調整視窗大小
+	cvResizeWindow("rectified",1280,512);//調整視窗大小
 	while(1){
 		
 		img=cvQueryFrame(caprure);
 		if(!img) break;
 
-		rect_roi = cvRect(0,0,640,480);
+		rect_roi = cvRect(0,0,640,512);
 		cvGetSubRect(img, mat_roi, rect_roi);
 		cvGetImage(mat_roi, L_img);
-		rect_roi = cvRect(640,0,640,480);
+		rect_roi = cvRect(640,0,640,512);
 		cvGetSubRect(img, mat_roi, rect_roi);
 		cvGetImage(mat_roi, R_img);
 	
@@ -417,9 +420,9 @@ void CStereoProjectDlg::OnBnClickedButton2()
 	cvRemap( L_img, Rect_img_L,L_mapx, L_mapy );
 	cvRemap( R_img, Rect_img_R,R_mapx, R_mapy );
 	cvNamedWindow("Rectify_L",0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
-	cvResizeWindow("Rectify_L",640,480);//調整視窗大小
+	cvResizeWindow("Rectify_L",640,512);//調整視窗大小
 	cvNamedWindow("Rectify_R",0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
-	cvResizeWindow("Rectify_R",640,480);//調整視窗大小
+	cvResizeWindow("Rectify_R",640,512);//調整視窗大小
 	cvShowImage("Rectify_L", Rect_img_L);//將圖片顯示在視窗上
 	cvShowImage("Rectify_R", Rect_img_R);//將圖片顯示在視窗上*/
 	
