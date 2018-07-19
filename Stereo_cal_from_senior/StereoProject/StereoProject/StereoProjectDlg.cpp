@@ -210,6 +210,8 @@ CvMat* L_mapx ;
 CvMat* L_mapy ;
 CvMat* R_mapx ;
 CvMat* R_mapy ;
+//NEW
+CvMat* Q = cvCreateMat(4, 4, CV_64F);
 int flag = 0;
 void CStereoProjectDlg::OnBnClickedButton1()
 {
@@ -325,10 +327,10 @@ void CStereoProjectDlg::OnBnClickedButton1()
 		R_intrinsic_matrix,R_distortion_coeffs,imgsize,R,T,E,F, CV_CALIB_FIX_ASPECT_RATIO + CV_CALIB_ZERO_TANGENT_DIST + CV_CALIB_SAME_FOCAL_LENGTH,cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5) );
 	
 	cout<<"cvStereoCalibrate完成\n\r";
-	//用bouguet(P691)
+	//用bouguet(P691) NEW
 	//得到的是L_Rrectify, R_Rrectify, L_Prectify, R_Prectify
 	cvStereoRectify(L_intrinsic_matrix, R_intrinsic_matrix,L_distortion_coeffs,R_distortion_coeffs, imgsize,
-		R,T,L_Rrectify, R_Rrectify, L_Prectify, R_Prectify, 0,CV_CALIB_ZERO_DISPARITY);
+		R,T,L_Rrectify, R_Rrectify, L_Prectify, R_Prectify,Q,CV_CALIB_ZERO_DISPARITY);
 	
 	L_mapx = cvCreateMat( imgsize.height,imgsize.width, CV_32F );
 	L_mapy = cvCreateMat( imgsize.height,imgsize.width, CV_32F );
@@ -461,7 +463,7 @@ void CStereoProjectDlg::OnBnClickedButton2()
 	cvFindStereoCorrespondenceBM(img1r,img2r,disp,BMState);//輸入左相機img1r 右相機img2r 輸出disparity map 注意左右相機要是單通道 也就是gray
 	cvNormalize( disp, vdisp, 0, 256, CV_MINMAX );//歸一化
 	
-	//vShowImage( "disparity", vdisp );
+	cvShowImage( "disparity", vdisp );
 	//上面是顯示 disparitymap 下面是顯示矯正過後的圖
 	cvGetCols( pair, part, 0, imgsize.width );
 	cvCvtColor(img1r, part, CV_GRAY2BGR );
@@ -482,9 +484,34 @@ void CStereoProjectDlg::OnBnClickedButton2()
 	}
 	if(c==27)
 	break;
+	
+	//------------------depth map	
+	cvNamedWindow("depth", 0);
+	cvResizeWindow("depth", 640, 512);//調整視窗大小
+	CvMat* _3dimage=cvCreateMat(imgsize.height, imgsize.width, CV_32FC3);;
+
+	
+	cvReprojectImageTo3D(vdisp, _3dimage,Q,true);
+	
+	for (int y = 0; y < _3dimage->rows; ++y)
+	{
+		for (int x = 0; x < _3dimage->cols; ++x)
+		{
+			cv::Point3f point =(cv::Point3f) _3dimage->data.fl[y*_3dimage->cols + x];
+			point.y = -point.y;
+			(cv::Point3f) _3dimage->data.fl[y*_3dimage->cols + x] = point;
 		}
+	}
+
+	
+	cvShowImage("depth", _3dimage);
+
+
+	}
+
+
 	cvDestroyWindow("disparity");//清除視窗記憶體
 	cvDestroyWindow("rectified");//清除視窗記憶體
-	
+	cvDestroyWindow("depth");
 
 }
