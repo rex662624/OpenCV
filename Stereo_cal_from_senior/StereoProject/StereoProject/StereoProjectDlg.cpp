@@ -1,5 +1,5 @@
-
-// StereoProjectDlg.cpp : ¹ê§@ÀÉ
+ï»¿
+// StereoProjectDlg.cpp : å¯¦ä½œæª”
 //
 
 #include "stdafx.h"
@@ -13,27 +13,27 @@
 #include <iostream>
 #include "opencv2/opencv.hpp"
 
+using namespace cv;
 using namespace std;
-
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
-
-// ¹ï App About ¨Ï¥Î CAboutDlg ¹ï¸Ü¤è¶ô
+static void saveXYZ(const char* filename, const CvMat* xyz);
+// å° App About ä½¿ç”¨ CAboutDlg å°è©±æ–¹å¡Š
 
 class CAboutDlg : public CDialogEx
 {
 public:
 	CAboutDlg();
 
-// ¹ï¸Ü¤è¶ô¸ê®Æ
+// å°è©±æ–¹å¡Šè³‡æ–™
 	enum { IDD = IDD_ABOUTBOX };
 
 	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV ¤ä´©
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV æ”¯æ´
 
-// µ{¦¡½X¹ê§@
+// ç¨‹å¼ç¢¼å¯¦ä½œ
 protected:
 	DECLARE_MESSAGE_MAP()
 };
@@ -51,7 +51,7 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 
-// CStereoProjectDlg ¹ï¸Ü¤è¶ô
+// CStereoProjectDlg å°è©±æ–¹å¡Š
 
 
 
@@ -75,15 +75,15 @@ BEGIN_MESSAGE_MAP(CStereoProjectDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 
-// CStereoProjectDlg °T®§³B²z±`¦¡
+// CStereoProjectDlg è¨Šæ¯è™•ç†å¸¸å¼
 
 BOOL CStereoProjectDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	// ±N [Ãö©ó...] ¥\¯àªí¥[¤J¨t²Î¥\¯àªí¡C
+	// å°‡ [é—œæ–¼...] åŠŸèƒ½è¡¨åŠ å…¥ç³»çµ±åŠŸèƒ½è¡¨ã€‚
 
-	// IDM_ABOUTBOX ¥²¶·¦b¨t²Î©R¥O½d³ò¤§¤¤¡C
+	// IDM_ABOUTBOX å¿…é ˆåœ¨ç³»çµ±å‘½ä»¤ç¯„åœä¹‹ä¸­ã€‚
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
 	ASSERT(IDM_ABOUTBOX < 0xF000);
 
@@ -101,16 +101,16 @@ BOOL CStereoProjectDlg::OnInitDialog()
 		}
 	}
 
-	// ³]©w¦¹¹ï¸Ü¤è¶ôªº¹Ï¥Ü¡C·íÀ³¥Îµ{¦¡ªº¥Dµøµ¡¤£¬O¹ï¸Ü¤è¶ô®É¡A
-	// ®Ø¬[·|¦Û°Ê±q¨Æ¦¹§@·~
-	SetIcon(m_hIcon, TRUE);			// ³]©w¤j¹Ï¥Ü
-	SetIcon(m_hIcon, FALSE);		// ³]©w¤p¹Ï¥Ü
+	// è¨­å®šæ­¤å°è©±æ–¹å¡Šçš„åœ–ç¤ºã€‚ç•¶æ‡‰ç”¨ç¨‹å¼çš„ä¸»è¦–çª—ä¸æ˜¯å°è©±æ–¹å¡Šæ™‚ï¼Œ
+	// æ¡†æ¶æœƒè‡ªå‹•å¾äº‹æ­¤ä½œæ¥­
+	SetIcon(m_hIcon, TRUE);			// è¨­å®šå¤§åœ–ç¤º
+	SetIcon(m_hIcon, FALSE);		// è¨­å®šå°åœ–ç¤º
 
-	// TODO: ¦b¦¹¥[¤JÃB¥~ªºªì©l³]©w
+	// TODO: åœ¨æ­¤åŠ å…¥é¡å¤–çš„åˆå§‹è¨­å®š
 	AllocConsole();
 	freopen ("CONOUT$", "w", stdout );
 
-	return TRUE;  // ¶Ç¦^ TRUE¡A°£«D±z¹ï±±¨î¶µ³]©wµJÂI
+	return TRUE;  // å‚³å› TRUEï¼Œé™¤éæ‚¨å°æ§åˆ¶é …è¨­å®šç„¦é»
 }
 
 void CStereoProjectDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -126,19 +126,19 @@ void CStereoProjectDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	}
 }
 
-// ¦pªG±N³Ì¤p¤Æ«ö¶s¥[¤J±zªº¹ï¸Ü¤è¶ô¡A±z»İ­n¤U¦Cªºµ{¦¡½X¡A
-// ¥H«KÃ¸»s¹Ï¥Ü¡C¹ï©ó¨Ï¥Î¤å¥ó/ÀËµø¼Ò¦¡ªº MFC À³¥Îµ{¦¡¡A
-// ®Ø¬[·|¦Û°Ê§¹¦¨¦¹§@·~¡C
+// å¦‚æœå°‡æœ€å°åŒ–æŒ‰éˆ•åŠ å…¥æ‚¨çš„å°è©±æ–¹å¡Šï¼Œæ‚¨éœ€è¦ä¸‹åˆ—çš„ç¨‹å¼ç¢¼ï¼Œ
+// ä»¥ä¾¿ç¹ªè£½åœ–ç¤ºã€‚å°æ–¼ä½¿ç”¨æ–‡ä»¶/æª¢è¦–æ¨¡å¼çš„ MFC æ‡‰ç”¨ç¨‹å¼ï¼Œ
+// æ¡†æ¶æœƒè‡ªå‹•å®Œæˆæ­¤ä½œæ¥­ã€‚
 
 void CStereoProjectDlg::OnPaint()
 {
 	if (IsIconic())
 	{
-		CPaintDC dc(this); // Ã¸»sªº¸Ë¸m¤º®e
+		CPaintDC dc(this); // ç¹ªè£½çš„è£ç½®å…§å®¹
 
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
 
-		// ±N¹Ï¥Ü¸m¤¤©ó¥Î¤áºİ¯x§Î
+		// å°‡åœ–ç¤ºç½®ä¸­æ–¼ç”¨æˆ¶ç«¯çŸ©å½¢
 		int cxIcon = GetSystemMetrics(SM_CXICON);
 		int cyIcon = GetSystemMetrics(SM_CYICON);
 		CRect rect;
@@ -146,7 +146,7 @@ void CStereoProjectDlg::OnPaint()
 		int x = (rect.Width() - cxIcon + 1) / 2;
 		int y = (rect.Height() - cyIcon + 1) / 2;
 
-		// ´yÃ¸¹Ï¥Ü
+		// æç¹ªåœ–ç¤º
 		dc.DrawIcon(x, y, m_hIcon);
 	}
 	else
@@ -155,8 +155,8 @@ void CStereoProjectDlg::OnPaint()
 	}
 }
 
-// ·í¨Ï¥ÎªÌ©ì¦²³Ì¤p¤Æµøµ¡®É¡A
-// ¨t²Î©I¥s³o­Ó¥\¯à¨ú±o´å¼ĞÅã¥Ü¡C
+// ç•¶ä½¿ç”¨è€…æ‹–æ›³æœ€å°åŒ–è¦–çª—æ™‚ï¼Œ
+// ç³»çµ±å‘¼å«é€™å€‹åŠŸèƒ½å–å¾—æ¸¸æ¨™é¡¯ç¤ºã€‚
 HCURSOR CStereoProjectDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
@@ -165,9 +165,9 @@ HCURSOR CStereoProjectDlg::OnQueryDragIcon()
 
 //https://blog.csdn.net/lijiayu2015/article/details/53079661
 CvSize imgsize=cvSize(640,512);
-int n_boards= 5; //»İ­nªO¤l¼Æ(·Ó¤ù¼Æ¶q!?)
-int board_w = 4; //ª©¼eÂI­Ó¼Æ
-int board_h = 6; //ªO°ªÂI­Ó¼Æ
+int n_boards= 2; //éœ€è¦æ¿å­æ•¸(ç…§ç‰‡æ•¸é‡)
+int board_w = 4; //ç‰ˆå¯¬é»å€‹æ•¸
+int board_h = 6; //æ¿é«˜é»å€‹æ•¸
 int board_n = board_w * board_h;
 CvSize board_sz = cvSize( board_w, board_h );
 int L_corner_count;
@@ -175,7 +175,7 @@ int R_corner_count;
 
 CvCapture* caprure;
 IplImage* img;
-CvRect rect_roi;//Region of Interest ·P¿³½ìªº³¡¤À¡A¤]´N¬O­n±q¼v¹³¤¤§ä¥X´Ñ½L®æ
+CvRect rect_roi;//Region of Interest æ„Ÿèˆˆè¶£çš„éƒ¨åˆ†ï¼Œä¹Ÿå°±æ˜¯è¦å¾å½±åƒä¸­æ‰¾å‡ºæ£‹ç›¤æ ¼
 CvMat* mat_roi = cvCreateMat(640, 512,CV_8UC3);
 
 IplImage* L_img;
@@ -186,8 +186,8 @@ IplImage* L_drawlineimg;
 IplImage* R_drawlineimg;
 IplImage* L_gray_img;
 IplImage* R_gray_img;
-CvPoint2D32f* L_corners = new CvPoint2D32f[ board_n ];//¦s¥ª¹Ïªº¨C­ÓÂIªº®y¼Ğ
-CvPoint2D32f* R_corners = new CvPoint2D32f[ board_n ];//¦s¥k¹Ïªº¨C­ÓÂIªº®y¼Ğ
+CvPoint2D32f* L_corners = new CvPoint2D32f[ board_n ];//å­˜å·¦åœ–çš„æ¯å€‹é»çš„åº§æ¨™
+CvPoint2D32f* R_corners = new CvPoint2D32f[ board_n ];//å­˜å³åœ–çš„æ¯å€‹é»çš„åº§æ¨™
 CvMat* L_image_points = cvCreateMat(n_boards*board_n,2,CV_32FC1);
 CvMat* R_image_points = cvCreateMat(n_boards*board_n,2,CV_32FC1);
 CvMat* object_points = cvCreateMat(n_boards*board_n,3,CV_32FC1);
@@ -213,21 +213,23 @@ CvMat* R_mapy ;
 //NEW
 CvMat* Q = cvCreateMat(4, 4, CV_64F);
 int flag = 0;
+int outflag = 0;
+
 void CStereoProjectDlg::OnBnClickedButton1()
 {
 	CString szFileName=0;
 	CFileDialog JPGDlg(TRUE);
 
-	JPGDlg.DoModal(); //¶}±Ò¿ï³æ
-	szFileName = JPGDlg.GetPathName();	//Àò±o¹Ï¤ù¸ô®|
+	JPGDlg.DoModal(); //é–‹å•Ÿé¸å–®
+	szFileName = JPGDlg.GetPathName();	//ç²å¾—åœ–ç‰‡è·¯å¾‘
 	CT2A filename(szFileName);
-	CvCapture* caprure=cvCreateFileCapture(filename);//Åª¨ú¼v¤ùÀÉ
-	cout<<"Åª¨ú¼v¤ù§¹¦¨"<<"\n\r";
+	CvCapture* caprure=cvCreateFileCapture(filename);//è®€å–å½±ç‰‡æª”
+	cout<<"è®€å–å½±ç‰‡å®Œæˆ"<<"\n\r";
 		
-	int successes=0;//¦¨¥\¦¸¼Æ
-	int step =0;//²Ä´X¦¸­pºâ*ÂIªº¼Æ¥Ø
-	//int frame;//­p¼Æ¥Î
-	//§â¼v¹³¦s¦¨¹Ï¤ù~~~~~~~~~~~~~
+	int successes=0;//æˆåŠŸæ¬¡æ•¸
+	int step =0;//ç¬¬å¹¾æ¬¡è¨ˆç®—*é»çš„æ•¸ç›®
+	//int frame;//è¨ˆæ•¸ç”¨
+	//æŠŠå½±åƒå­˜æˆåœ–ç‰‡~~~~~~~~~~~~~
 	int frame=0;
 	int board_dt=20;
 	L_img = cvCreateImage( cvSize(640,512), IPL_DEPTH_8U, 3);
@@ -237,28 +239,28 @@ void CStereoProjectDlg::OnBnClickedButton1()
 		
 		img=cvQueryFrame(caprure);
 		if(!img) break;
-		//¦]¬°¼v¤ù¬O¥ª¥kÂ\¦b¤@°_¡A©Ò¥H­n§â¥L¤Á³Î¦¨¤@¤H¤@¥b
+		//å› ç‚ºå½±ç‰‡æ˜¯å·¦å³æ“ºåœ¨ä¸€èµ·ï¼Œæ‰€ä»¥è¦æŠŠä»–åˆ‡å‰²æˆä¸€äººä¸€åŠ
 		rect_roi = cvRect(0,0,640,512);
-		cvGetSubRect(img, mat_roi, rect_roi);//­nÂ^¨úªº°Ï°ì¬Orect_roi©Ò©w¸q¡A·|§âimgªºrect_roi°Ï°ìÂ^¨úµ¹mat_roi
-		cvGetImage(mat_roi, L_img);//­è­èªº mat_roiÁÙ¤£¬O¹Ï¹³ ¥u¬O¯x°}(¬İtype´Nª¾¹D)¡A©Ò¥H­n§â¦oÂà¦¨¹Ï¹³
-		//¤W­±¬Oleft ¤U­±¬Oright
+		cvGetSubRect(img, mat_roi, rect_roi);//è¦æ“·å–çš„å€åŸŸæ˜¯rect_roiæ‰€å®šç¾©ï¼ŒæœƒæŠŠimgçš„rect_roiå€åŸŸæ“·å–çµ¦mat_roi
+		cvGetImage(mat_roi, L_img);//å‰›å‰›çš„ mat_roié‚„ä¸æ˜¯åœ–åƒ åªæ˜¯çŸ©é™£(çœ‹typeå°±çŸ¥é“)ï¼Œæ‰€ä»¥è¦æŠŠå¥¹è½‰æˆåœ–åƒ
+		//ä¸Šé¢æ˜¯left ä¸‹é¢æ˜¯right
 		rect_roi = cvRect(640,0,640,512);
 		cvGetSubRect(img, mat_roi, rect_roi);
 		cvGetImage(mat_roi, R_img);
-		//----------------------------------------------¨ì³o¸Ì¨ú±o¬Û¾÷¹Ï¹³ ¤U­±¶}©l§ä´Ñ½L®æ
+		//----------------------------------------------åˆ°é€™è£¡å–å¾—ç›¸æ©Ÿåœ–åƒ ä¸‹é¢é–‹å§‹æ‰¾æ£‹ç›¤æ ¼
 	
-	if(frame++ % board_dt==0){  //¨C20­Óframe¨ú¤@¦¸
+	if(frame++ % board_dt==0){  //æ¯20å€‹frameå–ä¸€æ¬¡
 		
-	//§ä¨ìchessboardªºcorner®y¼Ğ¨Ã¦s¨ìL_corners/R_corners
+	//æ‰¾åˆ°chessboardçš„corneråº§æ¨™ä¸¦å­˜åˆ°L_corners/R_corners
 	int L_found = cvFindChessboardCorners(L_img, board_sz, L_corners, &L_corner_count,
-		CV_CALIB_CB_FILTER_QUADS);//­«­nªº¬O±o¨ì L_corners ¤]´N¬O´Ñ½Lªº¨C­ÓÂIªº®y¼Ğ.
+		CV_CALIB_CB_FILTER_QUADS);//é‡è¦çš„æ˜¯å¾—åˆ° L_corners ä¹Ÿå°±æ˜¯æ£‹ç›¤çš„æ¯å€‹é»çš„åº§æ¨™.
 	int R_found = cvFindChessboardCorners(R_img, board_sz, R_corners, &R_corner_count,
 		CV_CALIB_CB_FILTER_QUADS);
-	//®³¨ìcornersªº Subpixel accuracy  ¦]¬°¤W­±ªº¨ç¼Æ¥u¯àÀË´ú¥X¤@­Ó¤j²¤ªº­È¡A¤U­±¬O¥h§ä§óºë½Tªº­È ¥Î cvFindCornerSubPix
-	L_gray_img = cvCreateImage(imgsize,8,1);//subpixel ¥ı«Å§i
+	//æ‹¿åˆ°cornersçš„ Subpixel accuracy  å› ç‚ºä¸Šé¢çš„å‡½æ•¸åªèƒ½æª¢æ¸¬å‡ºä¸€å€‹å¤§ç•¥çš„å€¼ï¼Œä¸‹é¢æ˜¯å»æ‰¾æ›´ç²¾ç¢ºçš„å€¼ ç”¨ cvFindCornerSubPix
+	L_gray_img = cvCreateImage(imgsize,8,1);//subpixel å…ˆå®£å‘Š
 	R_gray_img = cvCreateImage(imgsize,8,1);//subpixel
 	
-	cvCvtColor(L_img,L_gray_img, CV_BGR2GRAY);//§âimgÂà¦¨¦Ç¶¥¡A´î¤Ö±m¦â¤zÂZ
+	cvCvtColor(L_img,L_gray_img, CV_BGR2GRAY);//æŠŠimgè½‰æˆç°éšï¼Œæ¸›å°‘å½©è‰²å¹²æ“¾
 	cvCvtColor(R_img,R_gray_img, CV_BGR2GRAY);
 	
 	cvFindCornerSubPix(L_gray_img,L_corners,L_corner_count,cvSize(board_w, board_h),cvSize(-1,-1),
@@ -266,28 +268,28 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	cvFindCornerSubPix(R_gray_img,R_corners,R_corner_count,cvSize(board_w, board_h),cvSize(-1,-1),
 		cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
 		
-	L_drawimg = cvCloneImage(L_img);//½Æ»s¤@¥÷§¹¾ãªºIplImage¸ê®Æµ²ºc¹Ï§Î¤Î³]©w
-	R_drawimg = cvCloneImage(R_img);//½Æ»s¤@¥÷§¹¾ãªºIplImage¸ê®Æµ²ºc¹Ï§Î¤Î³]©w
+	L_drawimg = cvCloneImage(L_img);//è¤‡è£½ä¸€ä»½å®Œæ•´çš„IplImageè³‡æ–™çµæ§‹åœ–å½¢åŠè¨­å®š
+	R_drawimg = cvCloneImage(R_img);//è¤‡è£½ä¸€ä»½å®Œæ•´çš„IplImageè³‡æ–™çµæ§‹åœ–å½¢åŠè¨­å®š
 	
-	cvDrawChessboardCorners(L_drawimg, board_sz, L_corners,L_corner_count, L_found);//µe¥X´Ñ½L®æ³s½u
-	cvDrawChessboardCorners(R_drawimg, board_sz, R_corners,R_corner_count, R_found);//µe¥X´Ñ½L®æ³s½u
+	cvDrawChessboardCorners(L_drawimg, board_sz, L_corners,L_corner_count, L_found);//ç•«å‡ºæ£‹ç›¤æ ¼é€£ç·š
+	cvDrawChessboardCorners(R_drawimg, board_sz, R_corners,R_corner_count, R_found);//ç•«å‡ºæ£‹ç›¤æ ¼é€£ç·š
 	
-	cvNamedWindow("L_DrawChessboardCorners",0);//MFCµøµ¡³]©w//0¥i§ïÅÜ¤j¤p,1¦Û°Ê½Õ¾ã¹Ï§Î¤j¤p
-	cvNamedWindow("R_DrawChessboardCorners",0);//MFCµøµ¡³]©w//0¥i§ïÅÜ¤j¤p,1¦Û°Ê½Õ¾ã¹Ï§Î¤j¤p
-	cvResizeWindow("L_DrawChessboardCorners",640,512);//½Õ¾ãµøµ¡¤j¤p
-	cvResizeWindow("R_DrawChessboardCorners",640,512);//½Õ¾ãµøµ¡¤j¤p
-	cvShowImage("L_DrawChessboardCorners", L_drawimg );//±N¹Ï¤ùÅã¥Ü¦bµøµ¡¤W
-	cvShowImage("R_DrawChessboardCorners", R_drawimg );//±N¹Ï¤ùÅã¥Ü¦bµøµ¡¤W
+	cvNamedWindow("L_DrawChessboardCorners",0);//MFCè¦–çª—è¨­å®š//0å¯æ”¹è®Šå¤§å°,1è‡ªå‹•èª¿æ•´åœ–å½¢å¤§å°
+	cvNamedWindow("R_DrawChessboardCorners",0);//MFCè¦–çª—è¨­å®š//0å¯æ”¹è®Šå¤§å°,1è‡ªå‹•èª¿æ•´åœ–å½¢å¤§å°
+	cvResizeWindow("L_DrawChessboardCorners",640,512);//èª¿æ•´è¦–çª—å¤§å°
+	cvResizeWindow("R_DrawChessboardCorners",640,512);//èª¿æ•´è¦–çª—å¤§å°
+	cvShowImage("L_DrawChessboardCorners", L_drawimg );//å°‡åœ–ç‰‡é¡¯ç¤ºåœ¨è¦–çª—ä¸Š
+	cvShowImage("R_DrawChessboardCorners", R_drawimg );//å°‡åœ–ç‰‡é¡¯ç¤ºåœ¨è¦–çª—ä¸Š
 	
-	//¨ì³o¸Ì§ä¨ì´Ñ½L®y¼Ğ¡A¦Ó¥B¤w¸gµe¦b¹Ï¤W
+	//åˆ°é€™è£¡æ‰¾åˆ°æ£‹ç›¤åº§æ¨™ï¼Œè€Œä¸”å·²ç¶“ç•«åœ¨åœ–ä¸Š
 	// If we got a good board, add it to our data
 	if( L_corner_count == board_n && R_corner_count == board_n ) {
-	if (successes == 5&&flag==0) { flag = 1; }//new¦]¬°¾Çªøªº²Ä6­Ó¹Ï®×¬O¿ùªº
+	if (successes == 5&&flag==0) { flag = 1; }//newå› ç‚ºå­¸é•·çš„ç¬¬6å€‹åœ–æ¡ˆæ˜¯éŒ¯çš„
 	else{
 	step = successes*board_n;
-	//±Ncornerªº®y¼Ğ¦s¤J¯uªº­n¦sªº¦a¤è¡AL_corners¬O¨C¦¸Å|¥Nªº¼È¦s¡AL_image_points¤~¬O³Ì²×Àx¦sªº¦a¤è
+	//å°‡cornerçš„åº§æ¨™å­˜å…¥çœŸçš„è¦å­˜çš„åœ°æ–¹ï¼ŒL_cornersæ˜¯æ¯æ¬¡ç–Šä»£çš„æš«å­˜ï¼ŒL_image_pointsæ‰æ˜¯æœ€çµ‚å„²å­˜çš„åœ°æ–¹
 	for( int k=step, j=0; j<board_n; ++k,++j ) {
-			CV_MAT_ELEM(*L_image_points, float,k,0) = L_corners[j].x;//³o­Ó¨ç¼Æ¬O·Q±qCvMatÀò¨ú¤¸¯À¡A°Ñ¼Æ¤À§O¬O¶Ç¤J¯x°}/«İ´£¨úªº¤¸¯Àtype/­n©ñ¤J­ş¦æ/­ş¦C
+			CV_MAT_ELEM(*L_image_points, float,k,0) = L_corners[j].x;//é€™å€‹å‡½æ•¸æ˜¯æƒ³å¾CvMatç²å–å…ƒç´ ï¼Œåƒæ•¸åˆ†åˆ¥æ˜¯å‚³å…¥çŸ©é™£/å¾…æå–çš„å…ƒç´ type/è¦æ”¾å…¥å“ªè¡Œ/å“ªåˆ—
 			CV_MAT_ELEM(*L_image_points, float,k,1) = L_corners[j].y;
 			CV_MAT_ELEM(*R_image_points, float,k,0) = R_corners[j].x;
 			CV_MAT_ELEM(*R_image_points, float,k,1) = R_corners[j].y;
@@ -297,10 +299,10 @@ void CStereoProjectDlg::OnBnClickedButton1()
 		}
 		CV_MAT_ELEM(*point_counts, int,successes,0) = board_n;
 		successes++;
-		cout<<"¤wÀò¨ú"<<successes<<"­Ó¹Ï¹³¸ê®Æ";
+		cout<<"å·²ç²å–"<<successes<<"å€‹åœ–åƒè³‡æ–™";
 				}
 	}
-	 } //if ¨C20­Óframe¨ú¤@¦¸
+	 } //if æ¯20å€‹frameå–ä¸€æ¬¡
 	
 	char c =cvWaitKey(100);
 	if(c==32){       
@@ -314,21 +316,21 @@ void CStereoProjectDlg::OnBnClickedButton1()
 		
 	}//while
 
-	cout<<"chessboard¸ê°T¦¬´M§¹²¦\n\r";
-	//¨ì³o¸Ì§â´Ñ½L®y¼Ğ¦s§¹
-	//¥ıªì©l¤Æ¬Û¾÷ªº°Ñ¼Æ¯x°}L_intrinsic_matrix¡AR_intrinsic_matrix
+	cout<<"chessboardè³‡è¨Šæ”¶å°‹å®Œç•¢\n\r";
+	//åˆ°é€™è£¡æŠŠæ£‹ç›¤åº§æ¨™å­˜å®Œ
+	//å…ˆåˆå§‹åŒ–ç›¸æ©Ÿçš„åƒæ•¸çŸ©é™£L_intrinsic_matrixï¼ŒR_intrinsic_matrix
 	CV_MAT_ELEM( *L_intrinsic_matrix, float, 0, 0 ) = 1.0f;
 	CV_MAT_ELEM( *L_intrinsic_matrix, float, 1, 1 ) = 1.0f;
 	CV_MAT_ELEM( *R_intrinsic_matrix, float, 0, 0 ) = 1.0f;
 	CV_MAT_ELEM( *R_intrinsic_matrix, float, 1, 1 ) = 1.0f;
 
-	//¥D­n¥Ñ´Ñ½L®æªºÂI¸ê°T¡A±o¨ìªº¬O¤º°Ñ¼Æ ·îÅÜ«Y¼Æ ±ÛÂà¯x°}(R) ¥­²¾¦V¶q(T) ¥»½è¯x°}(E) °òÂ¦¯x°}(F)
+	//ä¸»è¦ç”±æ£‹ç›¤æ ¼çš„é»è³‡è¨Šï¼Œå¾—åˆ°çš„æ˜¯å…§åƒæ•¸ ç•¸è®Šä¿‚æ•¸ æ—‹è½‰çŸ©é™£(R) å¹³ç§»å‘é‡(T) æœ¬è³ªçŸ©é™£(E) åŸºç¤çŸ©é™£(F)
 	cvStereoCalibrate(object_points, L_image_points,R_image_points, point_counts,L_intrinsic_matrix, L_distortion_coeffs,
 		R_intrinsic_matrix,R_distortion_coeffs,imgsize,R,T,E,F, CV_CALIB_FIX_ASPECT_RATIO + CV_CALIB_ZERO_TANGENT_DIST + CV_CALIB_SAME_FOCAL_LENGTH,cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5) );
 	
-	cout<<"cvStereoCalibrate§¹¦¨\n\r";
-	//¥Îbouguet(P691) NEW
-	//±o¨ìªº¬OL_Rrectify, R_Rrectify, L_Prectify, R_Prectify
+	cout<<"cvStereoCalibrateå®Œæˆ\n\r";
+	//ç”¨bouguet(P691) NEW
+	//å¾—åˆ°çš„æ˜¯L_Rrectify, R_Rrectify, L_Prectify, R_Prectify
 	cvStereoRectify(L_intrinsic_matrix, R_intrinsic_matrix,L_distortion_coeffs,R_distortion_coeffs, imgsize,
 		R,T,L_Rrectify, R_Rrectify, L_Prectify, R_Prectify,Q,CV_CALIB_ZERO_DISPARITY);
 	
@@ -336,15 +338,15 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	L_mapy = cvCreateMat( imgsize.height,imgsize.width, CV_32F );
 	R_mapx = cvCreateMat( imgsize.height,imgsize.width, CV_32F );
 	R_mapy = cvCreateMat( imgsize.height,imgsize.width, CV_32F );
-	//Precompute maps for cvRemap()¶}©l°µP696ªº©Ò¦³°Ê§@¡A§â°Ñ¼Æ¶Ç¤J®Õ¥¿¾ã¥x¬Û¾÷¨Ã¿é¥XÁB¥¿«áªºL_mapx,L_mapy
+	//Precompute maps for cvRemap()é–‹å§‹åšP696çš„æ‰€æœ‰å‹•ä½œï¼ŒæŠŠåƒæ•¸å‚³å…¥æ ¡æ­£æ•´å°ç›¸æ©Ÿä¸¦è¼¸å‡ºçŸ¯æ­£å¾Œçš„L_mapx,L_mapy
 	cvInitUndistortRectifyMap(L_intrinsic_matrix,L_distortion_coeffs,L_Rrectify, L_Prectify,L_mapx,L_mapy);
 	cvInitUndistortRectifyMap(R_intrinsic_matrix,R_distortion_coeffs,R_Rrectify, R_Prectify,R_mapx,R_mapy);
-	cout<<"cvInitUndistortRectifyMap§¹¦¨\n\r";
+	cout<<"cvInitUndistortRectifyMapå®Œæˆ\n\r";
 
-	cvDestroyWindow("L_DrawChessboardCorners");//²M°£µøµ¡°O¾ĞÅé
-	cvDestroyWindow("R_DrawChessboardCorners");//²M°£µøµ¡°O¾ĞÅé
+	cvDestroyWindow("L_DrawChessboardCorners");//æ¸…é™¤è¦–çª—è¨˜æ†¶é«”
+	cvDestroyWindow("R_DrawChessboardCorners");//æ¸…é™¤è¦–çª—è¨˜æ†¶é«”
 	
-	//Always work in undistorted space ¥H¤U³£¬O¬°¤Fµe¬õ½u¥Îªº(P712)
+	//Always work in undistorted space ä»¥ä¸‹éƒ½æ˜¯ç‚ºäº†ç•«ç´…ç·šç”¨çš„(P712)
 	CvMat _L_Rect_image_points=cvMat(1,n_boards*board_n,CV_32FC2,L_corners);
 	CvMat _R_Rect_image_points=cvMat(1,n_boards*board_n,CV_32FC2,R_corners);
 	CvMat* L_Rect_image_points = cvCreateMat(1,n_boards*board_n,CV_32FC2);
@@ -363,30 +365,30 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	
 	float y1=0.0;
 	float y2=0.0;
-	L_drawlineimg = cvCloneImage(L_img);//½Æ»s¤@¥÷§¹¾ãªºIplImage¸ê®Æµ²ºc¹Ï§Î¤Î³]©w
-	R_drawlineimg = cvCloneImage(R_img);//½Æ»s¤@¥÷§¹¾ãªºIplImage¸ê®Æµ²ºc¹Ï§Î¤Î³]©w
+	L_drawlineimg = cvCloneImage(L_img);//è¤‡è£½ä¸€ä»½å®Œæ•´çš„IplImageè³‡æ–™çµæ§‹åœ–å½¢åŠè¨­å®š
+	R_drawlineimg = cvCloneImage(R_img);//è¤‡è£½ä¸€ä»½å®Œæ•´çš„IplImageè³‡æ–™çµæ§‹åœ–å½¢åŠè¨­å®š
 	
 	
-	for(int L_line=0*board_n;L_line<board_n;L_line++)//¥k½u¥ª¹Ï
+	for(int L_line=0*board_n;L_line<board_n;L_line++)//å³ç·šå·¦åœ–
 	{
 		y1=-cvmGet(R_Rect_lines,L_line,2)/cvmGet(R_Rect_lines,L_line,1);//ax+by+c=0 x=0 y=-c/b
 		y2=(-1)*((cvmGet(R_Rect_lines,L_line,0)*imgsize.width)+cvmGet(R_Rect_lines,L_line,2))/cvmGet(R_Rect_lines,L_line,1);
 		cvLine(L_drawlineimg,cvPoint(0,y1),cvPoint(imgsize.width,y2),CV_RGB(255,0,0),1);
 	
 	}
-	for(int R_line=0;R_line<board_n;R_line++)//¥ª½u¥k¹Ï
+	for(int R_line=0;R_line<board_n;R_line++)//å·¦ç·šå³åœ–
 	{
 		y1=-cvmGet(L_Rect_lines,R_line,2)/cvmGet(L_Rect_lines,R_line,1);//ax+by+c=0 x=0 y=-c/b
 		y2=(-1)*((cvmGet(L_Rect_lines,R_line,0)*imgsize.width)+cvmGet(L_Rect_lines,R_line,2))/cvmGet(L_Rect_lines,R_line,1);
 		cvLine(R_drawlineimg,cvPoint(0,y1),cvPoint(imgsize.width,y2),CV_RGB(255,0,0),1);
 	}
-	cout<<"Åã¥ÜEpipolar lines";
-	cvNamedWindow("L_DrawEpilines",0);//MFCµøµ¡³]©w//0¥i§ïÅÜ¤j¤p,1¦Û°Ê½Õ¾ã¹Ï§Î¤j¤p
-	cvNamedWindow("R_DrawEpilines",0);//MFCµøµ¡³]©w//0¥i§ïÅÜ¤j¤p,1¦Û°Ê½Õ¾ã¹Ï§Î¤j¤p
-	cvResizeWindow("L_DrawEpilines",640,512);//½Õ¾ãµøµ¡¤j¤p
-	cvResizeWindow("R_DrawEpilines",640,512);//½Õ¾ãµøµ¡¤j¤p
-	cvShowImage("L_DrawEpilines", L_drawlineimg );//±N¹Ï¤ùÅã¥Ü¦bµøµ¡¤W
-	cvShowImage("R_DrawEpilines",R_drawlineimg );//±N¹Ï¤ùÅã¥Ü¦bµøµ¡¤W
+	cout<<"é¡¯ç¤ºEpipolar lines";
+	cvNamedWindow("L_DrawEpilines",0);//MFCè¦–çª—è¨­å®š//0å¯æ”¹è®Šå¤§å°,1è‡ªå‹•èª¿æ•´åœ–å½¢å¤§å°
+	cvNamedWindow("R_DrawEpilines",0);//MFCè¦–çª—è¨­å®š//0å¯æ”¹è®Šå¤§å°,1è‡ªå‹•èª¿æ•´åœ–å½¢å¤§å°
+	cvResizeWindow("L_DrawEpilines",640,512);//èª¿æ•´è¦–çª—å¤§å°
+	cvResizeWindow("R_DrawEpilines",640,512);//èª¿æ•´è¦–çª—å¤§å°
+	cvShowImage("L_DrawEpilines", L_drawlineimg );//å°‡åœ–ç‰‡é¡¯ç¤ºåœ¨è¦–çª—ä¸Š
+	cvShowImage("R_DrawEpilines",R_drawlineimg );//å°‡åœ–ç‰‡é¡¯ç¤ºåœ¨è¦–çª—ä¸Š
 	
 }
 
@@ -401,18 +403,18 @@ void CStereoProjectDlg::OnBnClickedButton2()
 	CString szFileName=0;
 	CFileDialog JPGDlg(TRUE);
 	
-	JPGDlg.DoModal(); //¶}±Ò¿ï³æ
-	szFileName = JPGDlg.GetPathName();	//Àò±o¹Ï¤ù¸ô®|
+	JPGDlg.DoModal(); //é–‹å•Ÿé¸å–®
+	szFileName = JPGDlg.GetPathName();	//ç²å¾—åœ–ç‰‡è·¯å¾‘
 	CT2A filename(szFileName);
-	CvCapture* caprure=cvCreateFileCapture(filename);//Åª¨ú¼v¤ùÀÉ
-	cout<<"Åª¨ú¼v¤ù§¹¦¨(ªÅ¥ÕÁä=pause)"<<"\n\r";
+	CvCapture* caprure=cvCreateFileCapture(filename);//è®€å–å½±ç‰‡æª”
+	cout<<"è®€å–å½±ç‰‡å®Œæˆ(ç©ºç™½éµ=pause)"<<"\n\r";
 
 	cvNamedWindow( "disparity",0 );
-	cvResizeWindow("disparity",640,512);//½Õ¾ãµøµ¡¤j¤p
+	cvResizeWindow("disparity",640,512);//èª¿æ•´è¦–çª—å¤§å°
 	cvNamedWindow( "rectified",0 );
-	cvResizeWindow("rectified",1280,512);//½Õ¾ãµøµ¡¤j¤p
+	cvResizeWindow("rectified",1280,512);//èª¿æ•´è¦–çª—å¤§å°
 	while(1){
-		//¤@¼Ë¥ıÀò¨úframe©M¤Á³Î¥ª¥kµe­±
+		//ä¸€æ¨£å…ˆç²å–frameå’Œåˆ‡å‰²å·¦å³ç•«é¢
 		img=cvQueryFrame(caprure);
 		if(!img) break;
 
@@ -423,19 +425,19 @@ void CStereoProjectDlg::OnBnClickedButton2()
 		cvGetSubRect(img, mat_roi, rect_roi);
 		cvGetImage(mat_roi, R_img);
 	
-	// TODO: ¦b¦¹¥[¤J±±¨î¶µ§iª¾³B²z±`¦¡µ{¦¡½X
+	// TODO: åœ¨æ­¤åŠ å…¥æ§åˆ¶é …å‘ŠçŸ¥è™•ç†å¸¸å¼ç¨‹å¼ç¢¼
 	
 	
 	/*Rect_img_L=cvCloneImage( L_img );
 	Rect_img_R=cvCloneImage( R_img );
 	cvRemap( L_img, Rect_img_L,L_mapx, L_mapy );
 	cvRemap( R_img, Rect_img_R,R_mapx, R_mapy );
-	cvNamedWindow("Rectify_L",0);//MFCµøµ¡³]©w//0¥i§ïÅÜ¤j¤p,1¦Û°Ê½Õ¾ã¹Ï§Î¤j¤p
-	cvResizeWindow("Rectify_L",640,512);//½Õ¾ãµøµ¡¤j¤p
-	cvNamedWindow("Rectify_R",0);//MFCµøµ¡³]©w//0¥i§ïÅÜ¤j¤p,1¦Û°Ê½Õ¾ã¹Ï§Î¤j¤p
-	cvResizeWindow("Rectify_R",640,512);//½Õ¾ãµøµ¡¤j¤p
-	cvShowImage("Rectify_L", Rect_img_L);//±N¹Ï¤ùÅã¥Ü¦bµøµ¡¤W
-	cvShowImage("Rectify_R", Rect_img_R);//±N¹Ï¤ùÅã¥Ü¦bµøµ¡¤W*/
+	cvNamedWindow("Rectify_L",0);//MFCè¦–çª—è¨­å®š//0å¯æ”¹è®Šå¤§å°,1è‡ªå‹•èª¿æ•´åœ–å½¢å¤§å°
+	cvResizeWindow("Rectify_L",640,512);//èª¿æ•´è¦–çª—å¤§å°
+	cvNamedWindow("Rectify_R",0);//MFCè¦–çª—è¨­å®š//0å¯æ”¹è®Šå¤§å°,1è‡ªå‹•èª¿æ•´åœ–å½¢å¤§å°
+	cvResizeWindow("Rectify_R",640,512);//èª¿æ•´è¦–çª—å¤§å°
+	cvShowImage("Rectify_L", Rect_img_L);//å°‡åœ–ç‰‡é¡¯ç¤ºåœ¨è¦–çª—ä¸Š
+	cvShowImage("Rectify_R", Rect_img_R);//å°‡åœ–ç‰‡é¡¯ç¤ºåœ¨è¦–çª—ä¸Š*/
 	
 	CvMat* pair = cvCreateMat( imgsize.height, imgsize.width*2,CV_8UC3 );
 	CvMat* part = cvCreateMat( imgsize.height, imgsize.width,CV_8UC3 );
@@ -457,14 +459,13 @@ void CStereoProjectDlg::OnBnClickedButton2()
 	
 	cvCvtColor( L_img,img1r, CV_BGR2GRAY );
 	cvCvtColor( R_img,img2r, CV_BGR2GRAY );
-	//¨Ï¥Î«e­±­pºâªºL_mapx©ML_mapy¥ßÅé®Õ¥¿¹Ï¤ù¡A¨â­Ó¬Û¾÷ªº¹Ï¤ù³B©ó¦P¤@­Ó¬Û¾÷¥­­±¥B¦æ¹ï·Ç  ¥Îimg1r=img1r*ÁB¥¿ªº«Y¼Æ
+	//ä½¿ç”¨å‰é¢è¨ˆç®—çš„L_mapxå’ŒL_mapyç«‹é«”æ ¡æ­£åœ–ç‰‡ï¼Œå…©å€‹ç›¸æ©Ÿçš„åœ–ç‰‡è™•æ–¼åŒä¸€å€‹ç›¸æ©Ÿå¹³é¢ä¸”è¡Œå°æº–  ç”¨img1r=img1r*çŸ¯æ­£çš„ä¿‚æ•¸
 	cvRemap(img1r, img1r, L_mapx, L_mapy );
 	cvRemap(img2r, img2r, R_mapx, R_mapy );
-	cvFindStereoCorrespondenceBM(img1r,img2r,disp,BMState);//¿é¤J¥ª¬Û¾÷img1r ¥k¬Û¾÷img2r ¿é¥Xdisparity map ª`·N¥ª¥k¬Û¾÷­n¬O³æ³q¹D ¤]´N¬Ogray
-	cvNormalize( disp, vdisp, 0, 256, CV_MINMAX );//Âk¤@¤Æ
-	
+	cvFindStereoCorrespondenceBM(img1r,img2r,disp,BMState);//è¼¸å…¥å·¦ç›¸æ©Ÿimg1r å³ç›¸æ©Ÿimg2r è¼¸å‡ºdisparity map æ³¨æ„å·¦å³ç›¸æ©Ÿè¦æ˜¯å–®é€šé“ ä¹Ÿå°±æ˜¯gray
+	cvNormalize( disp, vdisp, 0, 256, CV_MINMAX );//æ­¸ä¸€åŒ–
 	cvShowImage( "disparity", vdisp );
-	//¤W­±¬OÅã¥Ü disparitymap ¤U­±¬OÅã¥ÜÁB¥¿¹L«áªº¹Ï
+	//ä¸Šé¢æ˜¯é¡¯ç¤º disparitymap ä¸‹é¢æ˜¯é¡¯ç¤ºçŸ¯æ­£éå¾Œçš„åœ–
 	cvGetCols( pair, part, 0, imgsize.width );
 	cvCvtColor(img1r, part, CV_GRAY2BGR );
 	cvGetCols( pair, part, imgsize.width,imgsize.width*2 );
@@ -474,7 +475,7 @@ void CStereoProjectDlg::OnBnClickedButton2()
 
 	cvShowImage( "rectified", pair );
 	
-	//¦pªGP´Npause
+	//å¦‚æœPå°±pause
 	char c =cvWaitKey(100);
 	if(c==32){       //p
 	c=0;
@@ -486,13 +487,14 @@ void CStereoProjectDlg::OnBnClickedButton2()
 	break;
 	
 	//------------------depth map	
-	cvNamedWindow("depth", 0);
-	cvResizeWindow("depth", 640, 512);//½Õ¾ãµøµ¡¤j¤p
-	CvMat* _3dimage=cvCreateMat(imgsize.height, imgsize.width, CV_32FC3);;
+	
+	//cvNamedWindow("depth", 0);
+	//cvResizeWindow("depth", 640, 512);//èª¿æ•´è¦–çª—å¤§å°
+	CvMat* _3dimage=cvCreateMat(imgsize.height, imgsize.width, CV_32FC3);
 
 	
 	cvReprojectImageTo3D(vdisp, _3dimage,Q,true);
-	
+	/*
 	for (int y = 0; y < _3dimage->rows; ++y)
 	{
 		for (int x = 0; x < _3dimage->cols; ++x)
@@ -502,16 +504,40 @@ void CStereoProjectDlg::OnBnClickedButton2()
 			(cv::Point3f) _3dimage->data.fl[y*_3dimage->cols + x] = point;
 		}
 	}
-
+	*/
 	
-	cvShowImage("depth", _3dimage);
-
-
+	//cvShowImage("depth", _3dimage);
+		if(outflag==0)
+		{ 
+			saveXYZ("xyz.txt", _3dimage);
+			outflag = 1;
+		}
+		
 	}
+	//cvDestroyWindow("depth");
+	
+	cvDestroyWindow("disparity");//æ¸…é™¤è¦–çª—è¨˜æ†¶é«”
+	cvDestroyWindow("rectified");//æ¸…é™¤è¦–çª—è¨˜æ†¶é«”
+	
 
+}
 
-	cvDestroyWindow("disparity");//²M°£µøµ¡°O¾ĞÅé
-	cvDestroyWindow("rectified");//²M°£µøµ¡°O¾ĞÅé
-	cvDestroyWindow("depth");
+//https://github.com/opencv/opencv/blob/master/samples/cpp/stereo_match.cpp
+static void saveXYZ(const char* filename, const CvMat* xyz)
+{
+	//convert CvMat to Mat	
+	Mat mat = cvarrToMat(xyz);
 
+	const double max_z = 1.0e4;
+	FILE* fp = fopen(filename, "wt");
+	for (int y = 0; y < mat.rows; y++)
+	{
+		for (int x = 0; x < mat.cols; x++)
+		{
+			Vec3f point = mat.at<Vec3f>(y, x);
+			if (fabs(point[2] - max_z) < FLT_EPSILON || fabs(point[2]) > max_z) continue;
+			fprintf(fp, "%f %f %f\n", point[0], point[1], point[2]);
+		}
+	}
+	fclose(fp);
 }
