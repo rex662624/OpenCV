@@ -1,0 +1,6 @@
+﻿  Source.cpp
+c:\users\user\source\repos\simpledepthtest\simpledepthtest\source.cpp(149): warning C4244: '正在初始化': 將 'double' 轉換為 'int'，由於類型不同，可能導致資料遺失
+c:\users\user\source\repos\simpledepthtest\simpledepthtest\source.cpp(152): warning C4244: '引數': 將 'double' 轉換為 'int'，由於類型不同，可能導致資料遺失
+c:\users\user\source\repos\simpledepthtest\simpledepthtest\source.cpp(155): warning C4244: '正在初始化': 將 'double' 轉換為 'int'，由於類型不同，可能導致資料遺失
+c:\users\user\source\repos\simpledepthtest\simpledepthtest\source.cpp(158): warning C4244: '引數': 將 'double' 轉換為 'int'，由於類型不同，可能導致資料遺失
+  SimpleDepthTest.vcxproj -> C:\Users\USER\source\repos\SimpleDepthTest\x64\Debug\SimpleDepthTest.exe
