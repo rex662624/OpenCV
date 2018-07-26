@@ -7,6 +7,9 @@
 using namespace cv;
 using namespace std;
 //我的充電器: HS:最大 V: 0~30
+//便利貼 H:17 54 S: 38 201 V:119 255
+//便利貼 H:17 54 S: 114 192 V:112 204
+
 int main(int argc, char** argv)
 {
 	// Capture the video from Integrated Webcam
@@ -24,13 +27,13 @@ int main(int argc, char** argv)
 	// Create a Control Window and Trackbars
 	namedWindow("Control", CV_WINDOW_AUTOSIZE);		// Control Window
 													//initial HSV
-	int iLowH = 49;
-	int iHighH = 67;
+	int iLowH = 17;
+	int iHighH = 54;
 
-	int iLowS = 61;
-	int iHighS = 197;
+	int iLowS = 54;
+	int iHighS = 201;
 
-	int iLowV = 73;
+	int iLowV = 91;
 	int iHighV = 255;
 
 	// Create Trackbars in Control Window
@@ -50,8 +53,14 @@ int main(int argc, char** argv)
 	//Mat imgLines = Mat::zeros(imgTmp.size(), CV_8UC3);;
 	Mat leftFrame, rightFrame;
 
+	int count=0;
+	//幾次算一次平均
+	int size = 5;
+
+	double average1=0, average2=0;//用來記disparity和Distance的平均
 	while (true)
 	{
+
 		Mat RImage;
 		Mat LImage;
 		Mat BGR_RImage, BGR_LImage;
@@ -146,6 +155,7 @@ int main(int argc, char** argv)
 			iLastY = posY;*/
 
 			// Draw a Red Circle tracking the Object
+			//PosX值從0~1280(所以單位是pixel)
 			int Radius_L = sqrt((dArea_L / 255) / 3.14);//先算半徑 由pi R^2 = Area
 			if (posX_L >= 0 && posY_L >= 0)
 			{
@@ -167,11 +177,40 @@ int main(int argc, char** argv)
 			cout << "Distance = " << d << endl;
 			cout << endl;
 			*/
+			//參考課本P668 因為兩者的原點都在中央(1280/2的位置，所以xl=pox_L-640 xr=pox_R-640)
 			//cout<<"posX_L: "<< posX_L<<" ,posX_R: "<< posX_R <<",posY_L: "<< posY_L<<",posY_R: "<< posY_R <<endl;
-			if(posX_R - posX_L!=0)
-			cout << posX_R - posX_L << ", "<< (double)175*15/ (double)(posX_R - posX_L)<<"cm"<<endl;
-			//cout << posX_R - posX_L * 15 / 175<<"cm"<<endl;
+			double disparity = (posX_R - 640) - (posX_L - 640)  ;//我們的LR是從我們看過去，但應該要從攝影機射出去看
+			//cout << (posX_L - 640) << "," << (posX_R - 640) << "," << disparity<<endl;
+			if (count < size) { 
+				
+				average1+= disparity;
+				average2 += (double)99.3*25.9 / (double)(disparity);
+				count++; 
+			
+			}
+			else { 
+				average1 /= (double)size;
+				average2 /= (double)size;
+				count = 0; 
+				cout << "averageDisparity: "<< average1 <<endl;
+				cout << "averageDistance: " << average2 << endl;
+				average1 = 0;
+				average2 = 0;
+			}
+			
+			
+
+
+			
+			//cout <<"Disparity: "<< disparity << endl;
+
+			//if(posX_R - posX!=0)
+			//cout << posX_R - posX_L << ", "<< (double)175*15/ (double)(posX_R - posX_L)<<"cm"<<endl;
 			//TEST1: 15cm ，posX_R - posX_L value 175
+			//TEST2 : 15cm ，disparity value 179.5
+			//TEST3 :25.9cm ，disparity value 98
+			//TEST4 :15cm ，disparity value 180
+			//cout << "Distance: " << (double)98 * 25.9 / (double)(disparity) << "cm" << endl;
 			// Find the Contour of the Object
 			/*vector<vector<cv::Point>> contours;
 			findContours(imgThresholded, contours, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
