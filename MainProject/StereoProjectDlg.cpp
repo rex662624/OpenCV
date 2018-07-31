@@ -669,7 +669,7 @@ void CStereoProjectDlg::OnBnClickedButton3()
 				cv::perspectiveTransform(obj_corners, scene_corners, H);
 
 				//-- Draw lines between the corners (the mapped object in the scene - image_2 )
-				/*
+				
 				cv::line(img_matches, \
 					scene_corners[0] + cv::Point2f(img_object.cols, 0), \
 					scene_corners[1] + cv::Point2f(img_object.cols, 0), \
@@ -686,7 +686,7 @@ void CStereoProjectDlg::OnBnClickedButton3()
 					scene_corners[3] + cv::Point2f(img_object.cols, 0), \
 					scene_corners[0] + cv::Point2f(img_object.cols, 0), \
 					cv::Scalar(0, 255, 0), 4);
-				*/
+				
 			}
 		}
 		cv::imshow("match result", img_matches);
@@ -821,7 +821,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 	
 	//NEW=== Create a Control Window and Trackbars
 	namedWindow("Control", 0);	// Control Window
-	resizeWindow("Control",380,250);
+	resizeWindow("Control",380,300);
 	int iLowH = 17;
 	int iHighH = 54;
 
@@ -830,6 +830,12 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 	int iLowV = 91;
 	int iHighV = 255;
+
+	int erodeSize = 5;
+	int dilateSize = 15;
+
+	createTrackbar("erode", "Control", &erodeSize, 50);		//Value (0 - 255)
+	createTrackbar("dilate", "Control", &dilateSize, 50);
 
 	// Create Trackbars in Control Window
 	createTrackbar("LowH", "Control", &iLowH, 179);		//Hue (0 - 179)
@@ -840,6 +846,8 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 	createTrackbar("LowV", "Control", &iLowV, 255);		//Value (0 - 255)
 	createTrackbar("HighV", "Control", &iHighV, 255);
+
+
 
 	while (1) {
 
@@ -905,11 +913,11 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 		// Morphological Closing (Removes small holes from the foreground)先膨脹再侵蝕 閉合(Closing)
 		//處理A物體內有許多細小的洞，需要把洞消除。
-		dilate(imgThresholded_L, imgThresholded_L, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
-		erode(imgThresholded_L, imgThresholded_L, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+		dilate(imgThresholded_L, imgThresholded_L, getStructuringElement(MORPH_ELLIPSE, Size(dilateSize, dilateSize)));
+		erode(imgThresholded_L, imgThresholded_L, getStructuringElement(MORPH_ELLIPSE, Size(erodeSize, erodeSize)));
 
-		dilate(imgThresholded_R, imgThresholded_R, getStructuringElement(MORPH_ELLIPSE, Size(20, 20)));
-		erode(imgThresholded_R, imgThresholded_R, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+		dilate(imgThresholded_R, imgThresholded_R, getStructuringElement(MORPH_ELLIPSE, Size(dilateSize, dilateSize)));
+		erode(imgThresholded_R, imgThresholded_R, getStructuringElement(MORPH_ELLIPSE, Size(erodeSize, erodeSize)));
 
 		// Calculate the Moments of the Thresholded Image
 		Moments oMoments_L = moments(imgThresholded_L);
