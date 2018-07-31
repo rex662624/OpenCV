@@ -2,6 +2,8 @@
 // StereoProjectDlg.cpp : 實作檔
 //
 
+
+
 #include "stdafx.h"
 #include "StereoProject.h"
 #include "StereoProjectDlg.h"
@@ -23,6 +25,7 @@ using namespace cv;
 #define new DEBUG_NEW
 #endif
 
+#pragma warning( disable : 4996 ) 
 
 // 對 App About 使用 CAboutDlg 對話方塊
 
@@ -169,9 +172,12 @@ HCURSOR CStereoProjectDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-CvSize imgsize=cvSize(1280,720);
+int CameraSizeW = 640;//單一camera的寬
+int CameraSizeH = 480;//單一camera的高
+
+CvSize imgsize=cvSize(CameraSizeW, CameraSizeH);
 //modified
-int n_boards= 10; //需要板子數
+int n_boards= 35; //需要板子數
 int board_w = 9; //版寬點個數
 int board_h = 6; //板高點個數
 int board_n = board_w * board_h;
@@ -182,7 +188,7 @@ int R_corner_count;
 CvCapture* caprure;
 IplImage* img;
 CvRect rect_roi;
-CvMat* mat_roi = cvCreateMat(1280, 720,CV_8UC3);
+CvMat* mat_roi = cvCreateMat(CameraSizeW, CameraSizeH,CV_8UC3);
 
 IplImage* L_img;
 IplImage* R_img;
@@ -236,8 +242,8 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	//把影像存成圖片~~~~~~~~~~~~~
 	int frame=0;
 	int board_dt=20;
-	L_img = cvCreateImage( cvSize(1280,720), IPL_DEPTH_8U, 3);
-	R_img = cvCreateImage( cvSize(1280, 720), IPL_DEPTH_8U, 3);
+	L_img = cvCreateImage( cvSize(CameraSizeW, CameraSizeH), IPL_DEPTH_8U, 3);
+	R_img = cvCreateImage( cvSize(CameraSizeW, CameraSizeH), IPL_DEPTH_8U, 3);
 
 	// ============== NEW ======================
 	int imgnum = 1; 
@@ -263,10 +269,10 @@ void CStereoProjectDlg::OnBnClickedButton1()
 
 		//img=cvQueryFrame(caprure);
 		if(!img) break;
-		rect_roi = cvRect(0,0, 1280, 720);
+		rect_roi = cvRect(0,0, CameraSizeW, CameraSizeH);
 		cvGetSubRect(img, mat_roi, rect_roi);
 		cvGetImage(mat_roi, L_img);
-		rect_roi = cvRect(1280,0, 1280, 720);
+		rect_roi = cvRect(CameraSizeW,0, CameraSizeW, CameraSizeH);
 		cvGetSubRect(img, mat_roi, rect_roi);
 		cvGetImage(mat_roi, R_img);
 	
@@ -299,8 +305,8 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	
 			cvNamedWindow("L_DrawChessboardCorners",0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
 			cvNamedWindow("R_DrawChessboardCorners",0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
-			cvResizeWindow("L_DrawChessboardCorners", 1280, 720);//調整視窗大小
-			cvResizeWindow("R_DrawChessboardCorners", 1280, 720);//調整視窗大小
+			cvResizeWindow("L_DrawChessboardCorners", CameraSizeW, CameraSizeH);//調整視窗大小
+			cvResizeWindow("R_DrawChessboardCorners", CameraSizeW, CameraSizeH);//調整視窗大小
 			cvShowImage("L_DrawChessboardCorners", L_drawimg );//將圖片顯示在視窗上
 			cvShowImage("R_DrawChessboardCorners", R_drawimg );//將圖片顯示在視窗上
 	
@@ -403,8 +409,8 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	printf("顯示Epipolar lines");
 	cvNamedWindow("L_DrawEpilines",0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
 	cvNamedWindow("R_DrawEpilines",0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
-	cvResizeWindow("L_DrawEpilines", 1280, 720);//調整視窗大小
-	cvResizeWindow("R_DrawEpilines", 1280, 720);//調整視窗大小
+	cvResizeWindow("L_DrawEpilines", CameraSizeW, CameraSizeH);//調整視窗大小
+	cvResizeWindow("R_DrawEpilines", CameraSizeW, CameraSizeH);//調整視窗大小
 	cvShowImage("L_DrawEpilines", L_drawlineimg );//將圖片顯示在視窗上
 	cvShowImage("R_DrawEpilines",R_drawlineimg );//將圖片顯示在視窗上
 	
@@ -429,8 +435,8 @@ void CStereoProjectDlg::OnBnClickedButton2()
 	// ========== NEW ======================
 	cv::VideoCapture video(0);	// org: 640 * 480
 
-	video.set(CV_CAP_PROP_FRAME_WIDTH, 2560);
-	video.set(CV_CAP_PROP_FRAME_HEIGHT,720);
+	video.set(CV_CAP_PROP_FRAME_WIDTH, CameraSizeW*2);
+	video.set(CV_CAP_PROP_FRAME_HEIGHT,  CameraSizeH);
 
 	if (!video.isOpened()) {
 		// bool VideoWriter::isOpened(): 
@@ -441,9 +447,9 @@ void CStereoProjectDlg::OnBnClickedButton2()
 
 	// ======================================
 	cvNamedWindow("disparity", 0);
-	cvResizeWindow("disparity", 1280,720);//調整視窗大小
+	cvResizeWindow("disparity", CameraSizeW, CameraSizeH);//調整視窗大小
 	cvNamedWindow("rectified", 0);
-	cvResizeWindow("rectified", 2560,720);//調整視窗大小
+	cvResizeWindow("rectified", CameraSizeW*2, CameraSizeH);//調整視窗大小
 										   // ====================
 										   /*
 										   cvNamedWindow("raw L", 0);
@@ -499,13 +505,13 @@ void CStereoProjectDlg::OnBnClickedButton2()
 
 		// https://blog.csdn.net/icvpr/article/details/8518863
 		cv::Mat RImage, greyRImage;
-		cv::Rect Rrect(0, 0, 1280,720);
+		cv::Rect Rrect(0, 0, CameraSizeW, CameraSizeH);
 		leftFrame(Rrect).copyTo(RImage);
 		cv::cvtColor(RImage, greyRImage, CV_BGR2GRAY);
 		img2r = &CvMat(greyRImage);
 
 		cv::Mat LImage, greyLImage;
-		cv::Rect Lrect(1280, 0, 1280,720);
+		cv::Rect Lrect(CameraSizeW , 0, CameraSizeW, CameraSizeH);
 		leftFrame(Lrect).copyTo(LImage);
 		cv::cvtColor(LImage, greyLImage, CV_BGR2GRAY);
 		img1r = &CvMat(greyLImage);
@@ -663,6 +669,7 @@ void CStereoProjectDlg::OnBnClickedButton3()
 				cv::perspectiveTransform(obj_corners, scene_corners, H);
 
 				//-- Draw lines between the corners (the mapped object in the scene - image_2 )
+				/*
 				cv::line(img_matches, \
 					scene_corners[0] + cv::Point2f(img_object.cols, 0), \
 					scene_corners[1] + cv::Point2f(img_object.cols, 0), \
@@ -679,7 +686,7 @@ void CStereoProjectDlg::OnBnClickedButton3()
 					scene_corners[3] + cv::Point2f(img_object.cols, 0), \
 					scene_corners[0] + cv::Point2f(img_object.cols, 0), \
 					cv::Scalar(0, 255, 0), 4);
-
+				*/
 			}
 		}
 		cv::imshow("match result", img_matches);
@@ -687,6 +694,7 @@ void CStereoProjectDlg::OnBnClickedButton3()
 		if (cv::waitKey(30) >= 0) break;
 	}
 }
+
 
 
 
@@ -704,8 +712,8 @@ void CStereoProjectDlg::OnBnClickedButton4()
 	int  c = 1; // For filename
 	VideoCapture video(0);	// org: 640 * 480
 
-	video.set(CV_CAP_PROP_FRAME_WIDTH, 2560);
-	video.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
+	video.set(CV_CAP_PROP_FRAME_WIDTH, CameraSizeW*2);
+	video.set(CV_CAP_PROP_FRAME_HEIGHT, CameraSizeH);
 	// VideoCapture::VideoCapture(int device): 
 	// 透過建構式不同的輸入參數，指定VideoCapture()的來源為影片檔或攝影機
 	// device：裝置(像攝影機)的編號
@@ -728,12 +736,12 @@ void CStereoProjectDlg::OnBnClickedButton4()
 
 			// https://blog.csdn.net/icvpr/article/details/8518863
 			cv::Mat RImage, greyRImage;
-			cv::Rect Rrect(0, 0, 1280,720);
+			cv::Rect Rrect(0, 0, CameraSizeW, CameraSizeH);
 			leftFrame(Rrect).copyTo(RImage);
 			cv::cvtColor(RImage, greyRImage, CV_BGR2GRAY);
 
 			cv::Mat LImage, greyLImage;
-			cv::Rect Lrect(1280, 0, 1280,720);
+			cv::Rect Lrect(CameraSizeW , 0, CameraSizeW, CameraSizeH);
 			leftFrame(Lrect).copyTo(LImage);
 			cv::cvtColor(LImage, greyLImage, CV_BGR2GRAY);
 
@@ -788,8 +796,8 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 	cv::VideoCapture video(0);	// org: 640 * 480
 
-	video.set(CV_CAP_PROP_FRAME_WIDTH, 2560);
-	video.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
+	video.set(CV_CAP_PROP_FRAME_WIDTH, CameraSizeW*2);
+	video.set(CV_CAP_PROP_FRAME_HEIGHT, CameraSizeH);
 
 	if (!video.isOpened()) {
 		// bool VideoWriter::isOpened(): 
@@ -847,12 +855,12 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 		// https://blog.csdn.net/icvpr/article/details/8518863
 		cv::Mat RImage, greyRImage;
-		cv::Rect Rrect(0, 0, 1280, 720);
+		cv::Rect Rrect(0, 0, CameraSizeW, CameraSizeH);
 		leftFrame(Rrect).copyTo(RImage);
 		img2r = &CvMat(RImage);
 
 		cv::Mat LImage, greyLImage;
-		cv::Rect Lrect(1280, 0, 1280, 720);
+		cv::Rect Lrect(CameraSizeW, 0, CameraSizeW, CameraSizeH);
 		leftFrame(Lrect).copyTo(LImage);
 		img1r = &CvMat(LImage);
 
@@ -889,18 +897,18 @@ void CStereoProjectDlg::OnBnClickedButton5()
 		//https://ccw1986.blogspot.com/2012/11/opencverodedilate.html
 		//http://monkeycoding.com/?p=577
 		//處理AB物體連在一起，要斷開。因為侵蝕是去除掉邊界，讓A B物體分明，但是這樣會失真，所以還需要膨脹恢復
-		erode(imgThresholded_L, imgThresholded_L, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+		erode(imgThresholded_L, imgThresholded_L, getStructuringElement(MORPH_ELLIPSE, Size(10, 10)));
 		dilate(imgThresholded_L, imgThresholded_L, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
 
-		erode(imgThresholded_R, imgThresholded_R, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+		erode(imgThresholded_R, imgThresholded_R, getStructuringElement(MORPH_ELLIPSE, Size(10, 10)));
 		dilate(imgThresholded_R, imgThresholded_R, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
 
 		// Morphological Closing (Removes small holes from the foreground)先膨脹再侵蝕 閉合(Closing)
 		//處理A物體內有許多細小的洞，需要把洞消除。
-		dilate(imgThresholded_L, imgThresholded_L, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+		dilate(imgThresholded_L, imgThresholded_L, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
 		erode(imgThresholded_L, imgThresholded_L, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
 
-		dilate(imgThresholded_R, imgThresholded_R, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+		dilate(imgThresholded_R, imgThresholded_R, getStructuringElement(MORPH_ELLIPSE, Size(20, 20)));
 		erode(imgThresholded_R, imgThresholded_R, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
 
 		// Calculate the Moments of the Thresholded Image
@@ -954,6 +962,15 @@ void CStereoProjectDlg::OnBnClickedButton5()
 				circle(RImage_after, Point(posX_R, posY_R), Radius_R, Scalar(0, 0, 255), 2);//在圖上畫一個圓
 			}
 
+			//==================
+			/*
+			int SSD = 0;
+			for (int i = 0; i < arraySize; i++)
+				SSD += (array1[i] - array2[i])*(array1[i] - array2[i]);
+
+			*/
+			//==================
+
 			// Calculate the Distance between the Object and the camera
 			/*
 			int realR = 4;
@@ -965,12 +982,17 @@ void CStereoProjectDlg::OnBnClickedButton5()
 			*/
 			//參考課本P668 因為兩者的原點都在中央(1280/2的位置，所以xl=pox_L-640 xr=pox_R-640)
 			//cout<<"posX_L: "<< posX_L<<" ,posX_R: "<< posX_R <<",posY_L: "<< posY_L<<",posY_R: "<< posY_R <<endl;
-			double disparity = (posX_R - 640) - (posX_L - 640);//我們的LR是從我們看過去，但應該要從攝影機射出去看
-															   //cout << (posX_L - 640) << "," << (posX_R - 640) << "," << disparity<<endl;
+			
+			//double disparity = (posX_R - CameraSizeW/2) - (posX_L - CameraSizeW / 2);
+			//cout << (posX_L - 640) << "," << (posX_R - 640) << "," << disparity<<endl;
+			//double disparity = posX_R- - posX_L + 26.4 ;//我們的LR是從我們看過去，但應該要從攝影機射出去看
+			double fix=30.3;//31.9,30
+			double disparity = posX_R - posX_L+fix;
 			if (count < size) {
 
 				average1 += disparity;
-				average2 += (double)135*15 / (double)(disparity);
+				//TEST1 : 15cm ，disparity value 101.6
+				average2 += (double)(105.3 + fix )*15 / (double)(disparity);
 				count++;
 
 			}
@@ -992,11 +1014,8 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 			//if(posX_R - posX!=0)
 			//cout << posX_R - posX_L << ", "<< (double)175*15/ (double)(posX_R - posX_L)<<"cm"<<endl;
-			//TEST1: 15cm ，posX_R - posX_L value 175
-			//TEST2 : 15cm ，disparity value 179.5
-			//TEST3 :25.9cm ，disparity value 98
-			//TEST4 :15cm ，disparity value 180
-			//38 163 4 255 0 56
+			
+
 			//cout << "Distance: " << (double)98 * 25.9 / (double)(disparity) << "cm" << endl;
 			// Find the Contour of the Object
 			/*vector<vector<cv::Point>> contours;
