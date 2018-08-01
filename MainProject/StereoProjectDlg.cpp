@@ -177,7 +177,7 @@ int CameraSizeH = 480;//單一camera的高
 
 CvSize imgsize=cvSize(CameraSizeW, CameraSizeH);
 //modified
-int n_boards= 35; //需要板子數
+int n_boards= 10; //需要板子數
 int board_w = 9; //版寬點個數
 int board_h = 6; //板高點個數
 int board_n = board_w * board_h;
@@ -785,7 +785,8 @@ void CStereoProjectDlg::OnBnClickedButton4()
 	destroyAllWindows();
 }
 
-
+//定義在最下面
+void contourFilter(Mat image, Mat skin_img);
 
 void CStereoProjectDlg::OnBnClickedButton5()
 {
@@ -848,7 +849,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 	createTrackbar("HighV", "Control", &iHighV, 255);
 
 
-
+	
 	while (1) {
 
 		// TODO: 在此加入控制項告知處理常式程式碼
@@ -900,6 +901,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 		inRange(imgHSV_L, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded_L);
 		inRange(imgHSV_R, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded_R);
 
+
 		// Noise Reduction using Mathematical Morphology
 		// Morphological Opening (Removes small objects from the foreground)先侵蝕再膨脹 斷開(Opening) 
 		//https://ccw1986.blogspot.com/2012/11/opencverodedilate.html
@@ -918,6 +920,12 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 		dilate(imgThresholded_R, imgThresholded_R, getStructuringElement(MORPH_ELLIPSE, Size(dilateSize, dilateSize)));
 		erode(imgThresholded_R, imgThresholded_R, getStructuringElement(MORPH_ELLIPSE, Size(erodeSize, erodeSize)));
+
+		//===================================把最大的框住
+		
+		contourFilter(RImage_after, imgThresholded_R);
+		contourFilter(LImage_after, imgThresholded_L);
+		//=========
 
 		// Calculate the Moments of the Thresholded Image
 		Moments oMoments_L = moments(imgThresholded_L);
@@ -1051,4 +1059,52 @@ void CStereoProjectDlg::OnBnClickedButton5()
 	}
 
 }
+
+/*
+skin_img:經過HSV 篩選出的圖片
+image:原來的圖片
+*/
+void contourFilter(Mat image, Mat skin_img)
+{
+	RNG rng(12345);//random number generator
+	Mat threshold_img;
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	
+	//將skin_img二值化 超過125像素就變255 反之就變0 把整張圖變黑白 目的:強度超過閾值的像素當作前景，反之則為背景
+	//in: skin_img ， out: threshold_img
+	threshold(skin_img, threshold_img, 125, 255, THRESH_BINARY);
+	
+	//變黑白後在黑白影像中尋找所有的輪廓
+	//in: threshold_img， out: contours
+	findContours(threshold_img, contours, hierarchy,
+		CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+	
+
+	vector<vector<Point> > contours_poly(contours.size());//叫做contours_poly的二維vector ，其中一個維度 size =contours.size() 用來存找到的所有輪廓
+	vector<Rect> boundRect(contours.size());//用來畫那個正方形的輪廓
+	//-------------here 8/1
+	for (int i = 0; i < contours.size(); i++)
+	{
+		approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true);
+		//計算可以包含輪廓的最小長方形區域
+
+		boundRect[i] = boundingRect(Mat(contours_poly[i]));
+
+		Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+		//隨機給一個顏色
+
+		if (boundRect[i].area() > 900)
+		{//長方形區域面積超過900，則畫在影像上
+			drawContours(image, contours_poly, i, color, 1, 8, vector<Vec4i>(), 0, Point());
+			rectangle(image, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0);
+		}
+	}
+	namedWindow("Contours", CV_WINDOW_AUTOSIZE);
+	imshow("Contours", image);
+}
+
+
+
+
 
