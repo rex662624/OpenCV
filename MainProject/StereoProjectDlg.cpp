@@ -177,7 +177,7 @@ int CameraSizeH = 480;//單一camera的高
 
 CvSize imgsize=cvSize(CameraSizeW, CameraSizeH);
 //modified
-int n_boards= 10; //需要板子數
+int n_boards= 35; //需要板子數
 int board_w = 9; //版寬點個數
 int board_h = 6; //板高點個數
 int board_n = board_w * board_h;
@@ -786,7 +786,7 @@ void CStereoProjectDlg::OnBnClickedButton4()
 }
 
 //定義在最下面
-void contourFilter(Mat image, Mat skin_img);
+int contourFilter(Mat image, Mat skin_img);
 
 void CStereoProjectDlg::OnBnClickedButton5()
 {
@@ -923,8 +923,8 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 		//===================================把最大的框住
 		
-		contourFilter(RImage_after, imgThresholded_R);
-		contourFilter(LImage_after, imgThresholded_L);
+		int DR= contourFilter(RImage_after, imgThresholded_R);
+		int DL= contourFilter(LImage_after, imgThresholded_L);
 		//=========
 
 		// Calculate the Moments of the Thresholded Image
@@ -1002,13 +1002,15 @@ void CStereoProjectDlg::OnBnClickedButton5()
 			//double disparity = (posX_R - CameraSizeW/2) - (posX_L - CameraSizeW / 2);
 			//cout << (posX_L - 640) << "," << (posX_R - 640) << "," << disparity<<endl;
 			//double disparity = posX_R- - posX_L + 26.4 ;//我們的LR是從我們看過去，但應該要從攝影機射出去看
-			double fix=30.3;//31.9,30
-			double disparity = posX_R - posX_L+fix;
+			double fix=28.64;// previous: 30.3
+			//double disparity = posX_R - posX_L+fix;
+			//TEST REC1:15cm:106 90cm:-5
+			double disparity = DR - DL + fix;
 			if (count < size) {
 
 				average1 += disparity;
 				//TEST1 : 15cm ，disparity value 101.6
-				average2 += (double)(105.3 + fix )*15 / (double)(disparity);
+				average2 += (double)(106 + fix )*15 / (double)(disparity);
 				count++;
 
 			}
@@ -1064,7 +1066,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 skin_img:經過HSV 篩選出的圖片
 image:原來的圖片
 */
-void contourFilter(Mat image, Mat skin_img)
+int contourFilter(Mat image, Mat skin_img)
 {
 	RNG rng(12345);//random number generator
 	Mat threshold_img;
@@ -1083,25 +1085,45 @@ void contourFilter(Mat image, Mat skin_img)
 
 	vector<vector<Point> > contours_poly(contours.size());//叫做contours_poly的二維vector ，其中一個維度 size =contours.size() 用來存找到的所有輪廓
 	vector<Rect> boundRect(contours.size());//用來畫那個正方形的輪廓
-	//-------------here 8/1
-	for (int i = 0; i < contours.size(); i++)
-	{
+
+	int largest_area = 0;
+	int largest_contour_index = 0;
+	Rect bounding_rect;
+	//---------------------
+	for (int i = 0; i < contours.size(); i++)//對每個偵測到的圖形(contours.size是偵測到的所有圖形數量 也就是輪廓數量)
+	{	//計算可以包含輪廓的最小長方形區域(用approxPolyDP作逼近，畫出一個輪廓的多邊形 然後用boundingRect去找出涵蓋這個多邊形的最小正方形)
+		//https://blog.csdn.net/liuphahaha/article/details/48271131
 		approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true);
-		//計算可以包含輪廓的最小長方形區域
+		
 
-		boundRect[i] = boundingRect(Mat(contours_poly[i]));
-
-		Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
-		//隨機給一個顏色
-
-		if (boundRect[i].area() > 900)
-		{//長方形區域面積超過900，則畫在影像上
-			drawContours(image, contours_poly, i, color, 1, 8, vector<Vec4i>(), 0, Point());
-			rectangle(image, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0);
+		//boundRect[i] = boundingRect(Mat(contours_poly[i]));
+		//找最大的圖形
+		double a = contourArea(contours_poly[i], false); // Find the area of contour
+		if (a > largest_area) {
+			largest_area = a;
+			largest_contour_index = i; // Store the index of largest contour
+			bounding_rect = boundingRect(Mat(contours_poly[i])); // Find the bounding rectangle for biggest contour
 		}
+
 	}
-	namedWindow("Contours", CV_WINDOW_AUTOSIZE);
-	imshow("Contours", image);
+
+	Scalar color2(255, 0, 0);
+	drawContours(image, contours_poly, largest_contour_index, color2, 5, 8, hierarchy); // Draw the largest contour using previously stored index.
+	rectangle(image, bounding_rect, Scalar(0, 255, 0), 1, 8, 0);
+
+	//cout <<"-----------"<<(double)bounding_rect.x<<endl;
+	return bounding_rect.x;
+	/*
+	//隨機給一個顏色
+	Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0u, 255));
+	if (boundRect[largest_contour_index].area() > 900)
+	{//長方形區域面積超過某個大小，則畫在影像上
+		drawContours(image, contours_poly, largest_contour_index, color, 1, 8, vector<Vec4i>(), 0, Point());//先畫包含的多邊形
+		rectangle(image, boundRect[largest_contour_index].tl(), boundRect[largest_contour_index].br(), color, 2, 8, 0);//然後畫包含多邊形的矩形
+	}
+	//namedWindow("Contours", CV_WINDOW_AUTOSIZE);
+	//imshow("Contours", image);
+	*/
 }
 
 
