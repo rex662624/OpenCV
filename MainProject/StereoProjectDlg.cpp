@@ -15,6 +15,11 @@
 #include <opencv2/nonfree/nonfree.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <math.h>
+//---socket----
+#pragma comment(lib, "Ws2_32.lib")
+#include <WinSock2.h>
+#include <string>
+//-------------
 
 #pragma warning( disable : 4996 )
 
@@ -859,8 +864,6 @@ int contourFilter(Mat image, Mat skin_img);
 void CStereoProjectDlg::OnBnClickedButton5()
 {
 
-
-
 	CString szFileName = 0;
 
 	cv::VideoCapture video(0);	// org: 640 * 480
@@ -915,6 +918,43 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 	createTrackbar("LowV", "Control", &iLowV, 255);		//Value (0 - 255)
 	createTrackbar("HighV", "Control", &iHighV, 255);
+
+	//-----socket--------
+	string confirm;
+	char message[1000];
+
+	//開始 Winsock-DLL
+	int r;
+	WSAData wsaData;
+	WORD DLLVersion;
+	DLLVersion = MAKEWORD(2, 1);
+	r = WSAStartup(DLLVersion, &wsaData);
+
+	//宣告給 socket 使用的 sockadder_in 結構
+	SOCKADDR_IN addr;
+
+	int addlen = sizeof(addr);
+
+	//設定 socket
+	SOCKET sConnect;
+
+	//AF_INET: internet-family
+	//SOCKET_STREAM: connection-oriented socket
+	sConnect = socket(AF_INET, SOCK_STREAM, NULL);
+
+	//設定 addr 資料
+	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(36000);
+	/*
+	cout << "connect to server?[Y] or [N]" << endl;
+	cin >> confirm;
+
+	if (confirm == "N")
+		exit(1);
+	else if (confirm == "Y")*/
+		connect(sConnect, (SOCKADDR*)&addr, sizeof(addr));
+	//-------------------
 
 
 
@@ -1046,24 +1086,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 				circle(RImage_after, Point(posX_R, posY_R), Radius_R, Scalar(0, 0, 255), 2);//在圖上畫一個圓
 			}
 
-			//==================
-			/*
-			int SSD = 0;
-			for (int i = 0; i < arraySize; i++)
-			SSD += (array1[i] - array2[i])*(array1[i] - array2[i]);
 
-			*/
-			//==================
-
-			// Calculate the Distance between the Object and the camera
-			/*
-			int realR = 4;
-			int f = -10;
-			int fpx = 750;
-			int d = (realR*fpx) / Radius_L + f;
-			cout << "Distance = " << d << endl;
-			cout << endl;
-			*/
 			//參考課本P668 因為兩者的原點都在中央(1280/2的位置，所以xl=pox_L-640 xr=pox_R-640)
 			//cout<<"posX_L: "<< posX_L<<" ,posX_R: "<< posX_R <<",posY_L: "<< posY_L<<",posY_R: "<< posY_R <<endl;
 
@@ -1073,14 +1096,20 @@ void CStereoProjectDlg::OnBnClickedButton5()
 			double fix = 28.64;// previous: 30.3
 							   //double disparity = posX_R - posX_L+fix;
 							   //TEST REC1:15cm:106 90cm:-5
-			double disparity = DR - DL + fix;
+
+			double disparity = DR - DL + fix;//兩邊x座標相減+左邊視野遮蔽處修正			
+			double distance=-1;//尚未偵測東西
+
+			if (disparity <= 0)//太遠 偵測不到
+				distance = 10000;
+			else
+				distance = (double)(106 + fix) * 15 / (double)(disparity);
 			if (count < size) {
 
 				average1 += disparity;
-				//TEST1 : 15cm ，disparity value 101.6
-				average2 += (double)(106 + fix) * 15 / (double)(disparity);
+				average2 += distance;
 				count++;
-
+				
 			}
 			else {
 				average1 /= (double)size;
@@ -1092,9 +1121,10 @@ void CStereoProjectDlg::OnBnClickedButton5()
 				average2 = 0;
 			}
 
-
-
-
+			//----------socket
+			sprintf(message, "%lf", distance);
+			send(sConnect, message, (int)strlen(message), 0);
+			//----------------
 
 			//cout <<"Disparity: "<< disparity << endl;
 
@@ -1127,6 +1157,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 		}
 
 	}
+	closesocket(sConnect);
 
 }
 
