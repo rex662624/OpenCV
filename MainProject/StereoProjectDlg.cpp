@@ -2,8 +2,6 @@
 // StereoProjectDlg.cpp : 實作檔
 //
 
-
-
 #include "stdafx.h"
 #include "StereoProject.h"
 #include "StereoProjectDlg.h"
@@ -18,6 +16,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <math.h>
 
+#pragma warning( disable : 4996 )
+
 using namespace std;
 using namespace cv;
 
@@ -25,7 +25,6 @@ using namespace cv;
 #define new DEBUG_NEW
 #endif
 
-#pragma warning( disable : 4996 ) 
 
 // 對 App About 使用 CAboutDlg 對話方塊
 
@@ -34,13 +33,13 @@ class CAboutDlg : public CDialogEx
 public:
 	CAboutDlg();
 
-// 對話方塊資料
+	// 對話方塊資料
 	enum { IDD = IDD_ABOUTBOX };
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支援
 
-// 程式碼實作
+														// 程式碼實作
 protected:
 	DECLARE_MESSAGE_MAP()
 };
@@ -116,9 +115,9 @@ BOOL CStereoProjectDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 設定大圖示
 	SetIcon(m_hIcon, FALSE);		// 設定小圖示
 
-	// TODO: 在此加入額外的初始設定
+									// TODO: 在此加入額外的初始設定
 	AllocConsole();
-	freopen ("CONOUT$", "w", stdout );
+	freopen("CONOUT$", "w", stdout);
 
 	return TRUE;  // 傳回 TRUE，除非您對控制項設定焦點
 }
@@ -175,20 +174,20 @@ HCURSOR CStereoProjectDlg::OnQueryDragIcon()
 int CameraSizeW = 640;//單一camera的寬
 int CameraSizeH = 480;//單一camera的高
 
-CvSize imgsize=cvSize(CameraSizeW, CameraSizeH);
+CvSize imgsize = cvSize(CameraSizeW, CameraSizeH);
 //modified
-int n_boards= 35; //需要板子數
+int n_boards = 20; //需要板子數
 int board_w = 9; //版寬點個數
 int board_h = 6; //板高點個數
 int board_n = board_w * board_h;
-CvSize board_sz = cvSize( board_w, board_h );
+CvSize board_sz = cvSize(board_w, board_h);
 int L_corner_count;
 int R_corner_count;
 
 CvCapture* caprure;
 IplImage* img;
 CvRect rect_roi;
-CvMat* mat_roi = cvCreateMat(CameraSizeW, CameraSizeH,CV_8UC3);
+CvMat* mat_roi = cvCreateMat(CameraSizeW, CameraSizeH, CV_8UC3);
 
 IplImage* L_img;
 IplImage* R_img;
@@ -198,30 +197,30 @@ IplImage* L_drawlineimg;
 IplImage* R_drawlineimg;
 IplImage* L_gray_img;
 IplImage* R_gray_img;
-CvPoint2D32f* L_corners = new CvPoint2D32f[ board_n ];
-CvPoint2D32f* R_corners = new CvPoint2D32f[ board_n ];
-CvMat* L_image_points = cvCreateMat(n_boards*board_n,2,CV_32FC1);
-CvMat* R_image_points = cvCreateMat(n_boards*board_n,2,CV_32FC1);
-CvMat* object_points = cvCreateMat(n_boards*board_n,3,CV_32FC1);
-CvMat* point_counts = cvCreateMat(n_boards,1,CV_32SC1);
+CvPoint2D32f* L_corners = new CvPoint2D32f[board_n];
+CvPoint2D32f* R_corners = new CvPoint2D32f[board_n];
+CvMat* L_image_points = cvCreateMat(n_boards*board_n, 2, CV_32FC1);
+CvMat* R_image_points = cvCreateMat(n_boards*board_n, 2, CV_32FC1);
+CvMat* object_points = cvCreateMat(n_boards*board_n, 3, CV_32FC1);
+CvMat* point_counts = cvCreateMat(n_boards, 1, CV_32SC1);
 
-CvMat* L_intrinsic_matrix = cvCreateMat(3,3,CV_32FC1);
-CvMat* L_distortion_coeffs = cvCreateMat(5,1,CV_32FC1);
-CvMat* R_intrinsic_matrix = cvCreateMat(3,3,CV_32FC1);
-CvMat* R_distortion_coeffs = cvCreateMat(5,1,CV_32FC1);
-CvMat* R = cvCreateMat(3,3,CV_64FC1);
-CvMat* T = cvCreateMat(3,1,CV_64FC1);
-CvMat* E = cvCreateMat(3,3,CV_64FC1);
-CvMat* F = cvCreateMat(3,3,CV_64FC1);
+CvMat* L_intrinsic_matrix = cvCreateMat(3, 3, CV_32FC1);
+CvMat* L_distortion_coeffs = cvCreateMat(5, 1, CV_32FC1);
+CvMat* R_intrinsic_matrix = cvCreateMat(3, 3, CV_32FC1);
+CvMat* R_distortion_coeffs = cvCreateMat(5, 1, CV_32FC1);
+CvMat* R = cvCreateMat(3, 3, CV_64FC1);
+CvMat* T = cvCreateMat(3, 1, CV_64FC1);
+CvMat* E = cvCreateMat(3, 3, CV_64FC1);
+CvMat* F = cvCreateMat(3, 3, CV_64FC1);
 
-CvMat* L_Rrectify = cvCreateMat(3,3,CV_64F);
-CvMat* R_Rrectify = cvCreateMat(3,3,CV_64F);
-CvMat* L_Prectify = cvCreateMat(3,4,CV_64F);
-CvMat* R_Prectify = cvCreateMat(3,4,CV_64F);
-CvMat* L_mapx ;
-CvMat* L_mapy ;
-CvMat* R_mapx ;
-CvMat* R_mapy ;
+CvMat* L_Rrectify = cvCreateMat(3, 3, CV_64F);
+CvMat* R_Rrectify = cvCreateMat(3, 3, CV_64F);
+CvMat* L_Prectify = cvCreateMat(3, 4, CV_64F);
+CvMat* R_Prectify = cvCreateMat(3, 4, CV_64F);
+CvMat* L_mapx;
+CvMat* L_mapy;
+CvMat* R_mapx;
+CvMat* R_mapy;
 
 void CStereoProjectDlg::OnBnClickedButton1()
 {
@@ -235,27 +234,27 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	CvCapture* caprure=cvCreateFileCapture(filename);//讀取影片檔
 	*/
 	printf("讀取影片完成\n\r");
-		
-	int successes=0;//成功次數
-	int step =0;//第幾次計算*點的數目
-	//int frame;//計數用
-	//把影像存成圖片~~~~~~~~~~~~~
-	int frame=0;
-	int board_dt=20;
-	L_img = cvCreateImage( cvSize(CameraSizeW, CameraSizeH), IPL_DEPTH_8U, 3);
-	R_img = cvCreateImage( cvSize(CameraSizeW, CameraSizeH), IPL_DEPTH_8U, 3);
+
+	int successes = 0;//成功次數
+	int step = 0;//第幾次計算*點的數目
+				 //int frame;//計數用
+				 //把影像存成圖片~~~~~~~~~~~~~
+	int frame = 0;
+	int board_dt = 20;
+	L_img = cvCreateImage(cvSize(CameraSizeW, CameraSizeH), IPL_DEPTH_8U, 3);
+	R_img = cvCreateImage(cvSize(CameraSizeW, CameraSizeH), IPL_DEPTH_8U, 3);
 
 	// ============== NEW ======================
-	int imgnum = 1; 
+	int imgnum = 1;
 	int k = 0;
 	cv::String path("./pic_12cm/*.jpg"); //select only jpg
 	vector<cv::String> fn;
 	//vector<cv::Mat> data;
 	cv::glob(path, fn, true); // recurse
 
-	// =========================================
+							  // =========================================
 
-	while(successes < n_boards){
+	while (successes < n_boards) {
 		// ref: https://blog.csdn.net/likezhaobin/article/details/6764583
 		//char *imgName = (char*)malloc(sizeof(char)* 10);
 		//sprintf(imgName, "%d.PNG", imgnum++);
@@ -268,152 +267,152 @@ void CStereoProjectDlg::OnBnClickedButton1()
 		img = &IplImage(im);
 
 		//img=cvQueryFrame(caprure);
-		if(!img) break;
-		rect_roi = cvRect(0,0, CameraSizeW, CameraSizeH);
+		if (!img) break;
+		rect_roi = cvRect(0, 0, CameraSizeW, CameraSizeH);
 		cvGetSubRect(img, mat_roi, rect_roi);
 		cvGetImage(mat_roi, L_img);
-		rect_roi = cvRect(CameraSizeW,0, CameraSizeW, CameraSizeH);
+		rect_roi = cvRect(CameraSizeW, 0, CameraSizeW, CameraSizeH);
 		cvGetSubRect(img, mat_roi, rect_roi);
 		cvGetImage(mat_roi, R_img);
-	
-//		if(frame++ % board_dt==0){  //每20個frame取一次
-		
-			//找到chessboard的corner座標並存到corners
-			int L_found = cvFindChessboardCorners(L_img, board_sz, L_corners, &L_corner_count,
-				CV_CALIB_CB_FILTER_QUADS);
-			int R_found = cvFindChessboardCorners(R_img, board_sz, R_corners, &R_corner_count,
-				CV_CALIB_CB_FILTER_QUADS);
-			//拿到corners的 Subpixel accuracy 
-			L_gray_img = cvCreateImage(imgsize,8,1);//subpixel
-			R_gray_img = cvCreateImage(imgsize,8,1);//subpixel
-	
-			cvCvtColor(L_img,L_gray_img, CV_BGR2GRAY);
-			cvCvtColor(R_img,R_gray_img, CV_BGR2GRAY);
-	
-			cvFindCornerSubPix(L_gray_img,L_corners,L_corner_count,cvSize(9,6),cvSize(-1,-1),
-				cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
-			cvFindCornerSubPix(R_gray_img,R_corners,R_corner_count,cvSize(9,6),cvSize(-1,-1),
-				cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
-		
-			L_drawimg = cvCloneImage(L_img);//複製一份完整的IplImage資料結構圖形及設定
-			R_drawimg = cvCloneImage(R_img);//複製一份完整的IplImage資料結構圖形及設定
-			L_drawlineimg = cvCloneImage(L_img);//複製一份完整的IplImage資料結構圖形及設定
-			R_drawlineimg = cvCloneImage(R_img);//複製一份完整的IplImage資料結構圖形及設定
-	
-			cvDrawChessboardCorners(L_drawimg, board_sz, L_corners,L_corner_count, L_found);//畫出棋盤格連線
-			cvDrawChessboardCorners(R_drawimg, board_sz, R_corners,R_corner_count, R_found);//畫出棋盤格連線
-	
-			cvNamedWindow("L_DrawChessboardCorners",0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
-			cvNamedWindow("R_DrawChessboardCorners",0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
-			cvResizeWindow("L_DrawChessboardCorners", CameraSizeW, CameraSizeH);//調整視窗大小
-			cvResizeWindow("R_DrawChessboardCorners", CameraSizeW, CameraSizeH);//調整視窗大小
-			cvShowImage("L_DrawChessboardCorners", L_drawimg );//將圖片顯示在視窗上
-			cvShowImage("R_DrawChessboardCorners", R_drawimg );//將圖片顯示在視窗上
-	
-			// If we got a good board, add it to our data
-			if( L_corner_count == board_n && R_corner_count == board_n  ) {
-				step = successes*board_n;
-				for( int k=step, j=0; j<board_n; ++k,++j ) {
-					CV_MAT_ELEM(*L_image_points, float,k,0) = L_corners[j].x;
-					CV_MAT_ELEM(*L_image_points, float,k,1) = L_corners[j].y;
-					CV_MAT_ELEM(*R_image_points, float,k,0) = R_corners[j].x;
-					CV_MAT_ELEM(*R_image_points, float,k,1) = R_corners[j].y;
-					CV_MAT_ELEM(*object_points,float,k,0) = j/board_w;
-					CV_MAT_ELEM(*object_points,float,k,1) = j%board_w;
-					CV_MAT_ELEM(*object_points,float,k,2) = 0.0f;
-				}
-				CV_MAT_ELEM(*point_counts, int,successes,0) = board_n;
-				successes++;
-				printf("已獲取 %d 個圖像資料\n", successes);
+
+		//		if(frame++ % board_dt==0){  //每20個frame取一次
+
+		//找到chessboard的corner座標並存到corners
+		int L_found = cvFindChessboardCorners(L_img, board_sz, L_corners, &L_corner_count,
+			CV_CALIB_CB_FILTER_QUADS);
+		int R_found = cvFindChessboardCorners(R_img, board_sz, R_corners, &R_corner_count,
+			CV_CALIB_CB_FILTER_QUADS);
+		//拿到corners的 Subpixel accuracy 
+		L_gray_img = cvCreateImage(imgsize, 8, 1);//subpixel
+		R_gray_img = cvCreateImage(imgsize, 8, 1);//subpixel
+
+		cvCvtColor(L_img, L_gray_img, CV_BGR2GRAY);
+		cvCvtColor(R_img, R_gray_img, CV_BGR2GRAY);
+
+		cvFindCornerSubPix(L_gray_img, L_corners, L_corner_count, cvSize(9, 6), cvSize(-1, -1),
+			cvTermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
+		cvFindCornerSubPix(R_gray_img, R_corners, R_corner_count, cvSize(9, 6), cvSize(-1, -1),
+			cvTermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
+
+		L_drawimg = cvCloneImage(L_img);//複製一份完整的IplImage資料結構圖形及設定
+		R_drawimg = cvCloneImage(R_img);//複製一份完整的IplImage資料結構圖形及設定
+		L_drawlineimg = cvCloneImage(L_img);//複製一份完整的IplImage資料結構圖形及設定
+		R_drawlineimg = cvCloneImage(R_img);//複製一份完整的IplImage資料結構圖形及設定
+
+		cvDrawChessboardCorners(L_drawimg, board_sz, L_corners, L_corner_count, L_found);//畫出棋盤格連線
+		cvDrawChessboardCorners(R_drawimg, board_sz, R_corners, R_corner_count, R_found);//畫出棋盤格連線
+
+		cvNamedWindow("L_DrawChessboardCorners", 0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
+		cvNamedWindow("R_DrawChessboardCorners", 0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
+		cvResizeWindow("L_DrawChessboardCorners", CameraSizeW, CameraSizeH);//調整視窗大小
+		cvResizeWindow("R_DrawChessboardCorners", CameraSizeW, CameraSizeH);//調整視窗大小
+		cvShowImage("L_DrawChessboardCorners", L_drawimg);//將圖片顯示在視窗上
+		cvShowImage("R_DrawChessboardCorners", R_drawimg);//將圖片顯示在視窗上
+
+														  // If we got a good board, add it to our data
+		if (L_corner_count == board_n && R_corner_count == board_n) {
+			step = successes * board_n;
+			for (int k = step, j = 0; j<board_n; ++k, ++j) {
+				CV_MAT_ELEM(*L_image_points, float, k, 0) = L_corners[j].x;
+				CV_MAT_ELEM(*L_image_points, float, k, 1) = L_corners[j].y;
+				CV_MAT_ELEM(*R_image_points, float, k, 0) = R_corners[j].x;
+				CV_MAT_ELEM(*R_image_points, float, k, 1) = R_corners[j].y;
+				CV_MAT_ELEM(*object_points, float, k, 0) = j / board_w;
+				CV_MAT_ELEM(*object_points, float, k, 1) = j % board_w;
+				CV_MAT_ELEM(*object_points, float, k, 2) = 0.0f;
 			}
-//		 } //if 每20個frame取一次
-	
-		char c =cvWaitKey(100);
-		if(c==32){       
-		c=0;
-		while(c!=32 && c!= 27){
-			c=cvWaitKey(250);
-				}
+			CV_MAT_ELEM(*point_counts, int, successes, 0) = board_n;
+			successes++;
+			printf("已獲取 %d 個圖像資料\n", successes);
 		}
-		if(c==27)
-		break;
-		
+		//		 } //if 每20個frame取一次
+
+		char c = cvWaitKey(100);
+		if (c == 32) {
+			c = 0;
+			while (c != 32 && c != 27) {
+				c = cvWaitKey(250);
+			}
+		}
+		if (c == 27)
+			break;
+
 	}//while
 
 	printf("chessboard資訊收尋完畢\n\r");
-	
-	CV_MAT_ELEM( *L_intrinsic_matrix, float, 0, 0 ) = 1.0f;
-	CV_MAT_ELEM( *L_intrinsic_matrix, float, 1, 1 ) = 1.0f;
-	CV_MAT_ELEM( *R_intrinsic_matrix, float, 0, 0 ) = 1.0f;
-	CV_MAT_ELEM( *R_intrinsic_matrix, float, 1, 1 ) = 1.0f;
-	
-	cvStereoCalibrate(object_points, L_image_points,R_image_points, point_counts,L_intrinsic_matrix, L_distortion_coeffs,
-		R_intrinsic_matrix,R_distortion_coeffs,imgsize,R,T,E,F,
-		cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 100, 1e-5),
-		CV_CALIB_FIX_ASPECT_RATIO +	CV_CALIB_ZERO_TANGENT_DIST +CV_CALIB_SAME_FOCAL_LENGTH );
+
+	CV_MAT_ELEM(*L_intrinsic_matrix, float, 0, 0) = 1.0f;
+	CV_MAT_ELEM(*L_intrinsic_matrix, float, 1, 1) = 1.0f;
+	CV_MAT_ELEM(*R_intrinsic_matrix, float, 0, 0) = 1.0f;
+	CV_MAT_ELEM(*R_intrinsic_matrix, float, 1, 1) = 1.0f;
+
+	cvStereoCalibrate(object_points, L_image_points, R_image_points, point_counts, L_intrinsic_matrix, L_distortion_coeffs,
+		R_intrinsic_matrix, R_distortion_coeffs, imgsize, R, T, E, F,
+		cvTermCriteria(CV_TERMCRIT_ITER + CV_TERMCRIT_EPS, 100, 1e-5),
+		CV_CALIB_FIX_ASPECT_RATIO + CV_CALIB_ZERO_TANGENT_DIST + CV_CALIB_SAME_FOCAL_LENGTH);
 	printf("cvStereoCalibrate完成\n\r");
-	
-	cvStereoRectify(L_intrinsic_matrix, R_intrinsic_matrix,L_distortion_coeffs,R_distortion_coeffs, imgsize,
-		R,T,L_Rrectify, R_Rrectify, L_Prectify, R_Prectify, 0,CV_CALIB_ZERO_DISPARITY);
-	
-	L_mapx = cvCreateMat( imgsize.height,imgsize.width, CV_32F );
-	L_mapy = cvCreateMat( imgsize.height,imgsize.width, CV_32F );
-	R_mapx = cvCreateMat( imgsize.height,imgsize.width, CV_32F );
-	R_mapy = cvCreateMat( imgsize.height,imgsize.width, CV_32F );
+
+	cvStereoRectify(L_intrinsic_matrix, R_intrinsic_matrix, L_distortion_coeffs, R_distortion_coeffs, imgsize,
+		R, T, L_Rrectify, R_Rrectify, L_Prectify, R_Prectify, 0, CV_CALIB_ZERO_DISPARITY);
+
+	L_mapx = cvCreateMat(imgsize.height, imgsize.width, CV_32F);
+	L_mapy = cvCreateMat(imgsize.height, imgsize.width, CV_32F);
+	R_mapx = cvCreateMat(imgsize.height, imgsize.width, CV_32F);
+	R_mapy = cvCreateMat(imgsize.height, imgsize.width, CV_32F);
 	// Precompute maps for cvRemap()
 	// Computes undistortion+rectification map for a head of stereo camera
-	cvInitUndistortRectifyMap(L_intrinsic_matrix,L_distortion_coeffs,L_Rrectify, L_Prectify,L_mapx,L_mapy);
-	cvInitUndistortRectifyMap(R_intrinsic_matrix,R_distortion_coeffs,R_Rrectify, R_Prectify,R_mapx,R_mapy);
+	cvInitUndistortRectifyMap(L_intrinsic_matrix, L_distortion_coeffs, L_Rrectify, L_Prectify, L_mapx, L_mapy);
+	cvInitUndistortRectifyMap(R_intrinsic_matrix, R_distortion_coeffs, R_Rrectify, R_Prectify, R_mapx, R_mapy);
 	printf("cvInitUndistortRectifyMap完成\n\r");
 
 	cvDestroyWindow("L_DrawChessboardCorners");//清除視窗記憶體
 	cvDestroyWindow("R_DrawChessboardCorners");//清除視窗記憶體
-	
-	//Always work in undistorted space
-	CvMat _L_Rect_image_points=cvMat(1,n_boards*board_n,CV_32FC2,L_corners);
-	CvMat _R_Rect_image_points=cvMat(1,n_boards*board_n,CV_32FC2,R_corners);
-	CvMat* L_Rect_image_points = cvCreateMat(1,n_boards*board_n,CV_32FC2);
-	CvMat* R_Rect_image_points = cvCreateMat(1,n_boards*board_n,CV_32FC2);
-		
-	cvUndistortPoints( &_L_Rect_image_points, L_Rect_image_points,L_intrinsic_matrix, L_distortion_coeffs
-		,0,L_intrinsic_matrix);
-	cvUndistortPoints( &_R_Rect_image_points, R_Rect_image_points,R_intrinsic_matrix, R_distortion_coeffs
-		,0, R_intrinsic_matrix);
-	
-	CvMat* L_Rect_lines = cvCreateMat(n_boards*board_n,3,CV_32FC1);
-	CvMat* R_Rect_lines = cvCreateMat(n_boards*board_n,3,CV_32FC1);
 
-	cvComputeCorrespondEpilines(L_Rect_image_points, 1, F, L_Rect_lines );
-	cvComputeCorrespondEpilines(R_Rect_image_points, 2, F, R_Rect_lines );
-	
-	float y1=0.0;
-	float y2=0.0;
+											   //Always work in undistorted space
+	CvMat _L_Rect_image_points = cvMat(1, n_boards*board_n, CV_32FC2, L_corners);
+	CvMat _R_Rect_image_points = cvMat(1, n_boards*board_n, CV_32FC2, R_corners);
+	CvMat* L_Rect_image_points = cvCreateMat(1, n_boards*board_n, CV_32FC2);
+	CvMat* R_Rect_image_points = cvCreateMat(1, n_boards*board_n, CV_32FC2);
+
+	cvUndistortPoints(&_L_Rect_image_points, L_Rect_image_points, L_intrinsic_matrix, L_distortion_coeffs
+		, 0, L_intrinsic_matrix);
+	cvUndistortPoints(&_R_Rect_image_points, R_Rect_image_points, R_intrinsic_matrix, R_distortion_coeffs
+		, 0, R_intrinsic_matrix);
+
+	CvMat* L_Rect_lines = cvCreateMat(n_boards*board_n, 3, CV_32FC1);
+	CvMat* R_Rect_lines = cvCreateMat(n_boards*board_n, 3, CV_32FC1);
+
+	cvComputeCorrespondEpilines(L_Rect_image_points, 1, F, L_Rect_lines);
+	cvComputeCorrespondEpilines(R_Rect_image_points, 2, F, R_Rect_lines);
+
+	float y1 = 0.0;
+	float y2 = 0.0;
 	/*
 	L_drawlineimg = cvCloneImage(L_img);//複製一份完整的IplImage資料結構圖形及設定
 	R_drawlineimg = cvCloneImage(R_img);//複製一份完整的IplImage資料結構圖形及設定
 	*/
-	
-	for(int L_line=0*board_n;L_line<board_n;L_line++)//右線左圖
+
+	for (int L_line = 0 * board_n; L_line<board_n; L_line++)//右線左圖
 	{
-		y1=-cvmGet(R_Rect_lines,L_line,2)/cvmGet(R_Rect_lines,L_line,1);//ax+by+c=0 x=0 y=-c/b
-		y2=(-1)*((cvmGet(R_Rect_lines,L_line,0)*imgsize.width)+cvmGet(R_Rect_lines,L_line,2))/cvmGet(R_Rect_lines,L_line,1);
-		cvLine(L_drawlineimg,cvPoint(0,y1),cvPoint(imgsize.width,y2),CV_RGB(255,0,0),1);
-	
+		y1 = -cvmGet(R_Rect_lines, L_line, 2) / cvmGet(R_Rect_lines, L_line, 1);//ax+by+c=0 x=0 y=-c/b
+		y2 = (-1)*((cvmGet(R_Rect_lines, L_line, 0)*imgsize.width) + cvmGet(R_Rect_lines, L_line, 2)) / cvmGet(R_Rect_lines, L_line, 1);
+		cvLine(L_drawlineimg, cvPoint(0, y1), cvPoint(imgsize.width, y2), CV_RGB(255, 0, 0), 1);
+
 	}
-	for(int R_line=0;R_line<board_n;R_line++)//左線右圖
+	for (int R_line = 0; R_line<board_n; R_line++)//左線右圖
 	{
-		y1=-cvmGet(L_Rect_lines,R_line,2)/cvmGet(L_Rect_lines,R_line,1);//ax+by+c=0 x=0 y=-c/b
-		y2=(-1)*((cvmGet(L_Rect_lines,R_line,0)*imgsize.width)+cvmGet(L_Rect_lines,R_line,2))/cvmGet(L_Rect_lines,R_line,1);
-		cvLine(R_drawlineimg,cvPoint(0,y1),cvPoint(imgsize.width,y2),CV_RGB(255,0,0),1);
+		y1 = -cvmGet(L_Rect_lines, R_line, 2) / cvmGet(L_Rect_lines, R_line, 1);//ax+by+c=0 x=0 y=-c/b
+		y2 = (-1)*((cvmGet(L_Rect_lines, R_line, 0)*imgsize.width) + cvmGet(L_Rect_lines, R_line, 2)) / cvmGet(L_Rect_lines, R_line, 1);
+		cvLine(R_drawlineimg, cvPoint(0, y1), cvPoint(imgsize.width, y2), CV_RGB(255, 0, 0), 1);
 	}
 	printf("顯示Epipolar lines");
-	cvNamedWindow("L_DrawEpilines",0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
-	cvNamedWindow("R_DrawEpilines",0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
+	cvNamedWindow("L_DrawEpilines", 0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
+	cvNamedWindow("R_DrawEpilines", 0);//MFC視窗設定//0可改變大小,1自動調整圖形大小
 	cvResizeWindow("L_DrawEpilines", CameraSizeW, CameraSizeH);//調整視窗大小
 	cvResizeWindow("R_DrawEpilines", CameraSizeW, CameraSizeH);//調整視窗大小
-	cvShowImage("L_DrawEpilines", L_drawlineimg );//將圖片顯示在視窗上
-	cvShowImage("R_DrawEpilines",R_drawlineimg );//將圖片顯示在視窗上
-	
+	cvShowImage("L_DrawEpilines", L_drawlineimg);//將圖片顯示在視窗上
+	cvShowImage("R_DrawEpilines", R_drawlineimg);//將圖片顯示在視窗上
+
 }
 
 
@@ -423,20 +422,15 @@ void CStereoProjectDlg::OnBnClickedButton2()
 {
 
 	CString szFileName = 0;
-	/*
-	CFileDialog JPGDlg(TRUE);
+	double fps;
+	char string[10];  // 用于存放帧率的字符串
+	double t = 0;
 
-	JPGDlg.DoModal(); //開啟選單
-	szFileName = JPGDlg.GetPathName();	//獲得圖片路徑
-	CT2A filename(szFileName);
-	CvCapture* caprure=cvCreateFileCapture(filename);//讀取影片檔
-	printf("讀取影片完成(空白鍵=pause)\n\r");
-	*/
 	// ========== NEW ======================
 	cv::VideoCapture video(0);	// org: 640 * 480
 
-	video.set(CV_CAP_PROP_FRAME_WIDTH, CameraSizeW*2);
-	video.set(CV_CAP_PROP_FRAME_HEIGHT,  CameraSizeH);
+	video.set(CV_CAP_PROP_FRAME_WIDTH, CameraSizeW * 2);
+	video.set(CV_CAP_PROP_FRAME_HEIGHT, CameraSizeH);
 
 	if (!video.isOpened()) {
 		// bool VideoWriter::isOpened(): 
@@ -449,26 +443,18 @@ void CStereoProjectDlg::OnBnClickedButton2()
 	cvNamedWindow("disparity", 0);
 	cvResizeWindow("disparity", CameraSizeW, CameraSizeH);//調整視窗大小
 	cvNamedWindow("rectified", 0);
-	cvResizeWindow("rectified", CameraSizeW*2, CameraSizeH);//調整視窗大小
-										   // ====================
-										   /*
-										   cvNamedWindow("raw L", 0);
-										   cvResizeWindow("raw L", 640, 480);//調整視窗大小
-										   cvNamedWindow("raw R", 0);
-										   cvResizeWindow("raw R", 640, 480);//調整視窗大小
-										   */
-										   // ============================
+	cvResizeWindow("rectified", CameraSizeW * 2, CameraSizeH);//調整視窗大小
+															  // ====================
+															  /*
+															  cvNamedWindow("raw L", 0);
+															  cvResizeWindow("raw L", 640, 480);//調整視窗大小
+															  cvNamedWindow("raw R", 0);
+															  cvResizeWindow("raw R", 640, 480);//調整視窗大小
+															  */
+															  // ============================
 	while (1) {
-		/*
-		img=cvQueryFrame(caprure);
-		if(!img) break;
-		rect_roi = cvRect(0,0,640,480);
-		cvGetSubRect(img, mat_roi, rect_roi);	// Makes a new matrix from <rect> subrectangle of input array. No data is copied.
-		cvGetImage(mat_roi, L_img);				// Converts CvArr (IplImage or CvMat) to IplImage
-		rect_roi = cvRect(640,0,640,480);
-		cvGetSubRect(img, mat_roi, rect_roi);
-		cvGetImage(mat_roi, R_img);
-		*/
+
+		t = (double)cv::getTickCount();
 		// TODO: 在此加入控制項告知處理常式程式碼
 
 
@@ -511,7 +497,7 @@ void CStereoProjectDlg::OnBnClickedButton2()
 		img2r = &CvMat(greyRImage);
 
 		cv::Mat LImage, greyLImage;
-		cv::Rect Lrect(CameraSizeW , 0, CameraSizeW, CameraSizeH);
+		cv::Rect Lrect(CameraSizeW, 0, CameraSizeW, CameraSizeH);
 		leftFrame(Lrect).copyTo(LImage);
 		cv::cvtColor(LImage, greyLImage, CV_BGR2GRAY);
 		img1r = &CvMat(greyLImage);
@@ -528,6 +514,20 @@ void CStereoProjectDlg::OnBnClickedButton2()
 		//cvShowImage("row R", img2r);	// ==========================
 		cvFindStereoCorrespondenceBM(img1r, img2r, disp, BMState);
 		cvNormalize(disp, vdisp, 0, 256, CV_MINMAX);
+		// count fps
+		t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+		fps = 1.0 / t;
+
+		sprintf(string, "%.2f", fps);      // 帧率保留两位小数
+		std::string fpsString("FPS:");
+		fpsString += string;                    // 在"FPS:"后加入帧率数值字符串
+												// 将帧率信息写在输出帧上
+		putText(cvarrToMat(vdisp),                  // 图像矩阵
+			fpsString,                  // string型文字内容
+			cv::Point(5, 460),           // 文字坐标，以左下角为原点
+			cv::FONT_HERSHEY_SIMPLEX,   // 字体类型
+			0.5,                    // 字体大小
+			cv::Scalar(255, 255, 255));           // 字体颜色
 
 		cvShowImage("disparity", vdisp);
 
@@ -537,6 +537,13 @@ void CStereoProjectDlg::OnBnClickedButton2()
 		cvCvtColor(img2r, part, CV_GRAY2BGR);
 		for (int j = 0; j < imgsize.height; j += 16)
 			cvLine(pair, cvPoint(0, j), cvPoint(imgsize.width * 2, j), CV_RGB(0, 255, 0));
+
+		putText(cvarrToMat(pair),                  // 图像矩阵
+			fpsString,                  // string型文字内容
+			cv::Point(5, 460),           // 文字坐标，以左下角为原点
+			cv::FONT_HERSHEY_SIMPLEX,   // 字体类型
+			0.5,                    // 字体大小
+			cv::Scalar(255, 255, 255));           // 字体颜色
 
 		cvShowImage("rectified", pair);
 
@@ -559,10 +566,23 @@ void CStereoProjectDlg::OnBnClickedButton2()
 void CStereoProjectDlg::OnBnClickedButton3()
 {
 	// TODO: 在此加入控制項告知處理常式程式碼
-	cv::Mat img_object = cv::imread("rec.jpg", cv::IMREAD_GRAYSCALE);
+	cv::Mat srcMat = cv::imread("rec.jpg", cv::IMREAD_GRAYSCALE);
+	cv::Mat img_object;
+
+	cv::resize(srcMat, img_object, cv::Size(srcMat.cols / 2, srcMat.rows / 2));
+
 	if (!img_object.data) { std::cout << "Err: reading object image failed...\n"; }
 
 	cv::VideoCapture cap(0);
+	//cap.set(CV_CAP_PROP_FRAME_WIDTH, 640);
+	//cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
+	//notice
+	cap.set(CV_CAP_PROP_FRAME_WIDTH, CameraSizeW * 2);
+	cap.set(CV_CAP_PROP_FRAME_HEIGHT, CameraSizeH);
+
+	double fps;
+	char string[10];  // 用于存放帧率的字符串
+	double t = 0;
 
 	if (!cap.isOpened())
 		return;
@@ -581,8 +601,7 @@ void CStereoProjectDlg::OnBnClickedButton3()
 	//-- object
 	if (method == 0) { //-- ORB
 		orb.detect(img_object, keypoints_object);
-		//cv::drawKeypoints(img_object, keypoints_object, img_object, cv::Scalar(0,255,255));
-		//cv::imshow("template", img_object);
+
 
 		orb.compute(img_object, keypoints_object, descriptors_object);
 	}
@@ -593,108 +612,137 @@ void CStereoProjectDlg::OnBnClickedButton3()
 	// http://stackoverflow.com/a/11798593
 	//if(descriptors_object.type() != CV_32F)
 	//    descriptors_object.convertTo(descriptors_object, CV_32F);
+	
+	
 
-
+	cv::Mat frame;
 	for (;;) {
-		cv::Mat frame;
-		cap >> frame;
+		if (cap.grab() && !img_object.empty()) {
+			
+			t = (double)cv::getTickCount();
+			cap.retrieve(frame, 0);
 
-		cv::Mat img_scene = cv::Mat(frame.size(), CV_8UC1);
-		cv::cvtColor(frame, img_scene, cv::COLOR_RGB2GRAY);
+			//cap >> frame;
 
-		if (method == 0) { //-- ORB
-			orb.detect(img_scene, keypoints_scene);
-			orb.compute(img_scene, keypoints_scene, descriptors_scene);
-		}
-		else { //-- SURF
-			detector.detect(img_scene, keypoints_scene);
-			extractor.compute(img_scene, keypoints_scene, descriptors_scene);
-		}
+			if (!frame.empty()) {
+				cv::resize(frame, frame, cv::Size(640,240),CV_INTER_AREA);
 
-		//-- matching descriptor vectors using FLANN matcher
-		cv::FlannBasedMatcher matcher;
-		std::vector<cv::DMatch> matches;
-		cv::Mat img_matches;
+				cv::Mat LImage, img_scene;
+				cv::Rect Lrect(0, 0, 320, 240);
+				frame(Lrect).copyTo(LImage);
+				//cv::cvtColor(LImage, greyLImage, CV_BGR2GRAY);
 
-		if (!descriptors_object.empty() && !descriptors_scene.empty()) {
-			matcher.match(descriptors_object, descriptors_scene, matches);
+				cv::cvtColor(LImage, img_scene, CV_BGR2GRAY);
 
-			double max_dist = 0; double min_dist = 100;
-
-			//-- Quick calculation of max and min idstance between keypoints
-			for (int i = 0; i < descriptors_object.rows; i++)
-			{
-				double dist = matches[i].distance;
-				if (dist < min_dist) min_dist = dist;
-				if (dist > max_dist) max_dist = dist;
-			}
-			//printf("-- Max dist : %f \n", max_dist );
-			//printf("-- Min dist : %f \n", min_dist );
-			//-- Draw only good matches (i.e. whose distance is less than 3*min_dist)
-			std::vector< cv::DMatch >good_matches;
-
-			for (int i = 0; i < descriptors_object.rows; i++)
-			{
-				if (matches[i].distance < 3 * min_dist)
-				{
-					good_matches.push_back(matches[i]);
+				if (method == 0) { //-- ORB
+					orb.detect(img_scene, keypoints_scene);
+					orb.compute(img_scene, keypoints_scene, descriptors_scene);
 				}
-			}
+				else { //-- SURF
+					detector.detect(img_scene, keypoints_scene);
+					extractor.compute(img_scene, keypoints_scene, descriptors_scene);
+				}
 
-			cv::drawMatches(img_object, keypoints_object, img_scene, keypoints_scene, \
-				good_matches, img_matches, cv::Scalar::all(-1), cv::Scalar::all(-1),
-				std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+				//-- matching descriptor vectors using FLANN matcher
+				cv::FlannBasedMatcher matcher;
+				std::vector<cv::DMatch> matches;
+				cv::Mat img_matches;
 
-			//-- localize the object
-			std::vector<cv::Point2f> obj;
-			std::vector<cv::Point2f> scene;
+				if (!descriptors_object.empty() && !descriptors_scene.empty()) {
+					matcher.match(descriptors_object, descriptors_scene, matches);
 
-			for (size_t i = 0; i < good_matches.size(); i++) {
-				//-- get the keypoints from the good matches
-				obj.push_back(keypoints_object[good_matches[i].queryIdx].pt);
-				scene.push_back(keypoints_scene[good_matches[i].trainIdx].pt);
-			}
-			if (!obj.empty() && !scene.empty() && good_matches.size() >= 4) {
-				cv::Mat H = cv::findHomography(obj, scene, cv::RANSAC);
+					double max_dist = 0; double min_dist = 100;
 
-				//-- get the corners from the object to be detected
-				std::vector<cv::Point2f> obj_corners(4);
-				obj_corners[0] = cv::Point(0, 0);
-				obj_corners[1] = cv::Point(img_object.cols, 0);
-				obj_corners[2] = cv::Point(img_object.cols, img_object.rows);
-				obj_corners[3] = cv::Point(0, img_object.rows);
+					//-- Quick calculation of max and min idstance between keypoints
+					for (int i = 0; i < descriptors_object.rows; i++)
+					{
+						double dist = matches[i].distance;
+						if (dist < min_dist) min_dist = dist;
+						if (dist > max_dist) max_dist = dist;
+					}
+					//printf("-- Max dist : %f \n", max_dist );
+					//printf("-- Min dist : %f \n", min_dist );
+					//-- Draw only good matches (i.e. whose distance is less than 3*min_dist)
+					std::vector< cv::DMatch >good_matches;
 
-				std::vector<cv::Point2f> scene_corners(4);
+					for (int i = 0; i < descriptors_object.rows; i++)
+					{
+						if (matches[i].distance < 3 * min_dist)
+						{
+							good_matches.push_back(matches[i]);
+						}
+					}
 
-				cv::perspectiveTransform(obj_corners, scene_corners, H);
+					cv::drawMatches(img_object, keypoints_object, img_scene, keypoints_scene, \
+						good_matches, img_matches, cv::Scalar::all(-1), cv::Scalar::all(-1),
+						std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+					// drawMatches: https://blog.csdn.net/lihuacui/article/details/56667342
+					//-- localize the object
+					std::vector<cv::Point2f> obj;
+					std::vector<cv::Point2f> scene;
 
-				//-- Draw lines between the corners (the mapped object in the scene - image_2 )
-				
-				cv::line(img_matches, \
-					scene_corners[0] + cv::Point2f(img_object.cols, 0), \
-					scene_corners[1] + cv::Point2f(img_object.cols, 0), \
-					cv::Scalar(0, 255, 0), 4);
-				cv::line(img_matches, \
-					scene_corners[1] + cv::Point2f(img_object.cols, 0), \
-					scene_corners[2] + cv::Point2f(img_object.cols, 0), \
-					cv::Scalar(0, 255, 0), 4);
-				cv::line(img_matches, \
-					scene_corners[2] + cv::Point2f(img_object.cols, 0), \
-					scene_corners[3] + cv::Point2f(img_object.cols, 0), \
-					cv::Scalar(0, 255, 0), 4);
-				cv::line(img_matches, \
-					scene_corners[3] + cv::Point2f(img_object.cols, 0), \
-					scene_corners[0] + cv::Point2f(img_object.cols, 0), \
-					cv::Scalar(0, 255, 0), 4);
-				
+					for (size_t i = 0; i < good_matches.size(); i++) {
+						//-- get the keypoints from the good matches
+						obj.push_back(keypoints_object[good_matches[i].queryIdx].pt);
+						scene.push_back(keypoints_scene[good_matches[i].trainIdx].pt);
+					}
+					if (!obj.empty() && !scene.empty() && good_matches.size() >= 4) {
+						cv::Mat H = cv::findHomography(obj, scene, cv::RANSAC);
+
+						//-- get the corners from the object to be detected
+						std::vector<cv::Point2f> obj_corners(4);
+						obj_corners[0] = cv::Point(0, 0);
+						obj_corners[1] = cv::Point(img_object.cols, 0);
+						obj_corners[2] = cv::Point(img_object.cols, img_object.rows);
+						obj_corners[3] = cv::Point(0, img_object.rows);
+
+						std::vector<cv::Point2f> scene_corners(4);
+
+						cv::perspectiveTransform(obj_corners, scene_corners, H);
+
+						//-- Draw lines between the corners (the mapped object in the scene - image_2 )
+						cv::line(img_matches, \
+							scene_corners[0] + cv::Point2f(img_object.cols, 0), \
+							scene_corners[1] + cv::Point2f(img_object.cols, 0), \
+							cv::Scalar(0, 255, 0), 4);
+						cv::line(img_matches, \
+							scene_corners[1] + cv::Point2f(img_object.cols, 0), \
+							scene_corners[2] + cv::Point2f(img_object.cols, 0), \
+							cv::Scalar(0, 255, 0), 4);
+						cv::line(img_matches, \
+							scene_corners[2] + cv::Point2f(img_object.cols, 0), \
+							scene_corners[3] + cv::Point2f(img_object.cols, 0), \
+							cv::Scalar(0, 255, 0), 4);
+						cv::line(img_matches, \
+							scene_corners[3] + cv::Point2f(img_object.cols, 0), \
+							scene_corners[0] + cv::Point2f(img_object.cols, 0), \
+							cv::Scalar(0, 255, 0), 4);
+
+					}
+				}
+
+				// count fps
+				t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+				fps = 1.0 / t;
+
+				sprintf(string, "%.2f", fps);      // 帧率保留两位小数
+				std::string fpsString("FPS:");
+				fpsString += string;                    // 在"FPS:"后加入帧率数值字符串
+														// 将帧率信息写在输出帧上
+				putText(img_matches,                  // 图像矩阵
+					fpsString,                  // string型文字内容
+					cv::Point(5, 220),           // 文字坐标，以左下角为原点
+					cv::FONT_HERSHEY_SIMPLEX,   // 字体类型
+					0.5,                    // 字体大小
+					cv::Scalar(255, 255, 255));           // 字体颜色
+				if (!img_matches.empty())
+					cv::imshow("match result", img_matches);
+
 			}
 		}
-		cv::imshow("match result", img_matches);
-
 		if (cv::waitKey(30) >= 0) break;
 	}
 }
-
 
 
 
@@ -705,6 +753,9 @@ void CStereoProjectDlg::OnBnClickedButton4()
 	//ref: http://monkeycoding.com/?p=649
 	// opencv: http://oblivious9.pixnet.net/blog/post/200316565-opencv-%E5%AE%89%E8%A3%9D%E5%92%8C%E8%A8%AD%E5%AE%9A%28for-visual-studio-%29
 	// 亂碼問題：http://blog.sina.com.cn/s/blog_9b70803f0102x70v.html
+	double fps;
+	char string[10];  // 用于存放帧率的字符串
+	double t = 0;
 
 	int ct = 0;
 	char tipka;
@@ -712,7 +763,7 @@ void CStereoProjectDlg::OnBnClickedButton4()
 	int  c = 1; // For filename
 	VideoCapture video(0);	// org: 640 * 480
 
-	video.set(CV_CAP_PROP_FRAME_WIDTH, CameraSizeW*2);
+	video.set(CV_CAP_PROP_FRAME_WIDTH, CameraSizeW * 2);
 	video.set(CV_CAP_PROP_FRAME_HEIGHT, CameraSizeH);
 	// VideoCapture::VideoCapture(int device): 
 	// 透過建構式不同的輸入參數，指定VideoCapture()的來源為影片檔或攝影機
@@ -732,6 +783,8 @@ void CStereoProjectDlg::OnBnClickedButton4()
 		// https://stackoverflow.com/questions/22891129/opening-2-webcams-from-the-same-usb-cable
 
 		if (video.grab()) {
+			t = (double)cv::getTickCount();
+
 			video.retrieve(leftFrame, 0);
 
 			// https://blog.csdn.net/icvpr/article/details/8518863
@@ -741,7 +794,7 @@ void CStereoProjectDlg::OnBnClickedButton4()
 			cv::cvtColor(RImage, greyRImage, CV_BGR2GRAY);
 
 			cv::Mat LImage, greyLImage;
-			cv::Rect Lrect(CameraSizeW , 0, CameraSizeW, CameraSizeH);
+			cv::Rect Lrect(CameraSizeW, 0, CameraSizeW, CameraSizeH);
 			leftFrame(Lrect).copyTo(LImage);
 			cv::cvtColor(LImage, greyLImage, CV_BGR2GRAY);
 
@@ -749,9 +802,23 @@ void CStereoProjectDlg::OnBnClickedButton4()
 			cv::cvtColor(leftFrame, greyRL, CV_BGR2GRAY);
 
 			if (!leftFrame.empty()) {
-				imshow("left demo", greyLImage);
-				imshow("right demo", greyRImage);
-				//imshow("press P to screen shot", greyRL);
+				t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+				fps = 1.0 / t;
+
+				sprintf(string, "%.2f", fps);      // 帧率保留两位小数
+				std::string fpsString("FPS:");
+				fpsString += string;                    // 在"FPS:"后加入帧率数值字符串
+														// 将帧率信息写在输出帧上
+				putText(greyRL,                  // 图像矩阵
+					fpsString,                  // string型文字内容
+					cv::Point(5, 460),           // 文字坐标，以左下角为原点
+					cv::FONT_HERSHEY_SIMPLEX,   // 字体类型
+					0.5,                    // 字体大小
+					cv::Scalar(255, 255, 255));
+
+				//imshow("left demo", greyLImage);
+				//imshow("right demo", greyRImage);
+				imshow("press P to screen shot", greyRL);
 			}
 			Sleep(5); // Sleep is mandatory - for no leg!
 
@@ -770,20 +837,21 @@ void CStereoProjectDlg::OnBnClickedButton4()
 		/*
 		if (waitKey(5) == 27)			//ESC 27, ENTER 13, SPACE 32
 		{
-			break;
+		break;
 		}
 		*/
-		
+
 		// 等待 30 秒，若是按下 Esc（ASCII為27），結束視窗
 		if (tipka == 'q') {
 			break;
 		}
-		
+
 	}
 
 	video.release();
 	destroyAllWindows();
 }
+
 
 //定義在最下面
 int contourFilter(Mat image, Mat skin_img);
@@ -797,7 +865,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 	cv::VideoCapture video(0);	// org: 640 * 480
 
-	video.set(CV_CAP_PROP_FRAME_WIDTH, CameraSizeW*2);
+	video.set(CV_CAP_PROP_FRAME_WIDTH, CameraSizeW * 2);
 	video.set(CV_CAP_PROP_FRAME_HEIGHT, CameraSizeH);
 
 	if (!video.isOpened()) {
@@ -819,10 +887,10 @@ void CStereoProjectDlg::OnBnClickedButton5()
 	CvMat* img2r = cvCreateMat(imgsize.height, imgsize.width, CV_8U);
 
 
-	
+
 	//NEW=== Create a Control Window and Trackbars
 	namedWindow("Control", 0);	// Control Window
-	resizeWindow("Control",380,300);
+	resizeWindow("Control", 380, 300);
 	int iLowH = 17;
 	int iHighH = 54;
 
@@ -849,7 +917,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 	createTrackbar("HighV", "Control", &iHighV, 255);
 
 
-	
+
 	while (1) {
 
 		// TODO: 在此加入控制項告知處理常式程式碼
@@ -922,9 +990,9 @@ void CStereoProjectDlg::OnBnClickedButton5()
 		erode(imgThresholded_R, imgThresholded_R, getStructuringElement(MORPH_ELLIPSE, Size(erodeSize, erodeSize)));
 
 		//===================================把最大的框住
-		
-		int DR= contourFilter(RImage_after, imgThresholded_R);
-		int DL= contourFilter(LImage_after, imgThresholded_L);
+
+		int DR = contourFilter(RImage_after, imgThresholded_R);
+		int DL = contourFilter(LImage_after, imgThresholded_L);
 		//=========
 
 		// Calculate the Moments of the Thresholded Image
@@ -982,7 +1050,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 			/*
 			int SSD = 0;
 			for (int i = 0; i < arraySize; i++)
-				SSD += (array1[i] - array2[i])*(array1[i] - array2[i]);
+			SSD += (array1[i] - array2[i])*(array1[i] - array2[i]);
 
 			*/
 			//==================
@@ -998,19 +1066,19 @@ void CStereoProjectDlg::OnBnClickedButton5()
 			*/
 			//參考課本P668 因為兩者的原點都在中央(1280/2的位置，所以xl=pox_L-640 xr=pox_R-640)
 			//cout<<"posX_L: "<< posX_L<<" ,posX_R: "<< posX_R <<",posY_L: "<< posY_L<<",posY_R: "<< posY_R <<endl;
-			
+
 			//double disparity = (posX_R - CameraSizeW/2) - (posX_L - CameraSizeW / 2);
 			//cout << (posX_L - 640) << "," << (posX_R - 640) << "," << disparity<<endl;
 			//double disparity = posX_R- - posX_L + 26.4 ;//我們的LR是從我們看過去，但應該要從攝影機射出去看
-			double fix=28.64;// previous: 30.3
-			//double disparity = posX_R - posX_L+fix;
-			//TEST REC1:15cm:106 90cm:-5
+			double fix = 28.64;// previous: 30.3
+							   //double disparity = posX_R - posX_L+fix;
+							   //TEST REC1:15cm:106 90cm:-5
 			double disparity = DR - DL + fix;
 			if (count < size) {
 
 				average1 += disparity;
 				//TEST1 : 15cm ，disparity value 101.6
-				average2 += (double)(106 + fix )*15 / (double)(disparity);
+				average2 += (double)(106 + fix) * 15 / (double)(disparity);
 				count++;
 
 			}
@@ -1032,7 +1100,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 			//if(posX_R - posX!=0)
 			//cout << posX_R - posX_L << ", "<< (double)175*15/ (double)(posX_R - posX_L)<<"cm"<<endl;
-			
+
 
 			//cout << "Distance: " << (double)98 * 25.9 / (double)(disparity) << "cm" << endl;
 			// Find the Contour of the Object
@@ -1072,16 +1140,16 @@ int contourFilter(Mat image, Mat skin_img)
 	Mat threshold_img;
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
-	
+
 	//將skin_img二值化 超過125像素就變255 反之就變0 把整張圖變黑白 目的:強度超過閾值的像素當作前景，反之則為背景
 	//in: skin_img ， out: threshold_img
 	threshold(skin_img, threshold_img, 125, 255, THRESH_BINARY);
-	
+
 	//變黑白後在黑白影像中尋找所有的輪廓
 	//in: threshold_img， out: contours
 	findContours(threshold_img, contours, hierarchy,
 		CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
-	
+
 
 	vector<vector<Point> > contours_poly(contours.size());//叫做contours_poly的二維vector ，其中一個維度 size =contours.size() 用來存找到的所有輪廓
 	vector<Rect> boundRect(contours.size());//用來畫那個正方形的輪廓
@@ -1094,7 +1162,7 @@ int contourFilter(Mat image, Mat skin_img)
 	{	//計算可以包含輪廓的最小長方形區域(用approxPolyDP作逼近，畫出一個輪廓的多邊形 然後用boundingRect去找出涵蓋這個多邊形的最小正方形)
 		//https://blog.csdn.net/liuphahaha/article/details/48271131
 		approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true);
-		
+
 
 		//boundRect[i] = boundingRect(Mat(contours_poly[i]));
 		//找最大的圖形
@@ -1118,15 +1186,10 @@ int contourFilter(Mat image, Mat skin_img)
 	Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0u, 255));
 	if (boundRect[largest_contour_index].area() > 900)
 	{//長方形區域面積超過某個大小，則畫在影像上
-		drawContours(image, contours_poly, largest_contour_index, color, 1, 8, vector<Vec4i>(), 0, Point());//先畫包含的多邊形
-		rectangle(image, boundRect[largest_contour_index].tl(), boundRect[largest_contour_index].br(), color, 2, 8, 0);//然後畫包含多邊形的矩形
+	drawContours(image, contours_poly, largest_contour_index, color, 1, 8, vector<Vec4i>(), 0, Point());//先畫包含的多邊形
+	rectangle(image, boundRect[largest_contour_index].tl(), boundRect[largest_contour_index].br(), color, 2, 8, 0);//然後畫包含多邊形的矩形
 	}
 	//namedWindow("Contours", CV_WINDOW_AUTOSIZE);
 	//imshow("Contours", image);
 	*/
 }
-
-
-
-
-
