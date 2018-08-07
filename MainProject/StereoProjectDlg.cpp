@@ -1048,6 +1048,8 @@ void CStereoProjectDlg::OnBnClickedButton5()
 		double dM10_R = oMoments_R.m10;
 		double dArea_R = oMoments_R.m00;
 
+		double distance = -1;//尚未偵測東西
+
 		// If the area <= 10000, consider that it's because of the noise
 		if (dArea_L > 10000 && dArea_R > 10000)
 		{
@@ -1098,7 +1100,6 @@ void CStereoProjectDlg::OnBnClickedButton5()
 							   //TEST REC1:15cm:106 90cm:-5
 
 			double disparity = DR - DL + fix;//兩邊x座標相減+左邊視野遮蔽處修正			
-			double distance=-1;//尚未偵測東西
 
 			if (disparity <= 0)//太遠 偵測不到
 				distance = 10000;
@@ -1115,17 +1116,11 @@ void CStereoProjectDlg::OnBnClickedButton5()
 				average1 /= (double)size;
 				average2 /= (double)size;
 				count = 0;
-				cout << "averageDisparity: " << average1 << endl;
-				cout << "averageDistance: " << average2 << endl;
+				//cout << "averageDisparity: " << average1 << endl;
+				//cout << "averageDistance: " << average2 << endl;
 				average1 = 0;
 				average2 = 0;
 			}
-
-			//----------socket
-			sprintf(message, "%lf", distance);
-			send(sConnect, message, (int)strlen(message), 0);
-			//----------------
-
 			//cout <<"Disparity: "<< disparity << endl;
 
 			//if(posX_R - posX!=0)
@@ -1141,6 +1136,12 @@ void CStereoProjectDlg::OnBnClickedButton5()
 			drawContours(imgLines, contours, i, Scalar(0, 0, 255), 2);
 			}*/
 		}
+
+		//----------socket send data to robot
+		cout << distance << endl;
+		sprintf(message, "%lf", distance);
+		send(sConnect, message, (int)strlen(message), 0);
+		//----------------
 
 		// Show the Thresholded Image
 		imshow("Thresholded_L Image", imgThresholded_L);
