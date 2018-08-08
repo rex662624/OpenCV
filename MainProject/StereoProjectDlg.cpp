@@ -858,8 +858,8 @@ void CStereoProjectDlg::OnBnClickedButton4()
 }
 
 
-//定義在最下面
-int contourFilter(Mat image, Mat skin_img);
+//定義在最下面 
+int contourFilter(Mat image, Mat skin_img, int* middle);//middle: 圖形中點的x座標
 
 void CStereoProjectDlg::OnBnClickedButton5()
 {
@@ -956,9 +956,11 @@ void CStereoProjectDlg::OnBnClickedButton5()
 		connect(sConnect, (SOCKADDR*)&addr, sizeof(addr));
 	//-------------------
 
-
+		
 
 	while (1) {
+
+		int middleL=0, middleR=0;//左右視野中圖形的中點座標
 
 		// TODO: 在此加入控制項告知處理常式程式碼
 
@@ -1031,8 +1033,8 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 		//===================================把最大的框住
 
-		int DR = contourFilter(RImage_after, imgThresholded_R);
-		int DL = contourFilter(LImage_after, imgThresholded_L);
+		int DR = contourFilter(RImage_after, imgThresholded_R,&middleL);
+		int DL = contourFilter(LImage_after, imgThresholded_L,&middleR);
 		//=========
 
 		// Calculate the Moments of the Thresholded Image
@@ -1138,8 +1140,9 @@ void CStereoProjectDlg::OnBnClickedButton5()
 		}
 
 		//----------socket send data to robot
-		cout << distance << endl;
-		sprintf(message, "%lf", distance);
+		//cout << distance << endl;
+		cout << distance <<","<<middleL<< endl;
+		sprintf(message, "%lf,%d", distance,middleL);
 		send(sConnect, message, (int)strlen(message), 0);
 		//----------------
 
@@ -1166,7 +1169,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 skin_img:經過HSV 篩選出的圖片
 image:原來的圖片
 */
-int contourFilter(Mat image, Mat skin_img)
+int contourFilter(Mat image, Mat skin_img,int* middle)
 {
 	RNG rng(12345);//random number generator
 	Mat threshold_img;
@@ -1212,6 +1215,8 @@ int contourFilter(Mat image, Mat skin_img)
 	rectangle(image, bounding_rect, Scalar(0, 255, 0), 1, 8, 0);
 
 	//cout <<"-----------"<<(double)bounding_rect.x<<endl;
+	//圖形中點=(左+右)/2
+	*middle = (bounding_rect.x + (bounding_rect.x + bounding_rect.width)) / 2;
 	return bounding_rect.x;
 	/*
 	//隨機給一個顏色
