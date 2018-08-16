@@ -432,7 +432,7 @@ void CStereoProjectDlg::OnBnClickedButton2()
 	double t = 0;
 
 	// ========== NEW ======================
-	cv::VideoCapture video(0);	// org: 640 * 480
+	cv::VideoCapture video(1);	// org: 640 * 480
 
 	video.set(CV_CAP_PROP_FRAME_WIDTH, CameraSizeW * 2);
 	video.set(CV_CAP_PROP_FRAME_HEIGHT, CameraSizeH);
@@ -578,7 +578,7 @@ void CStereoProjectDlg::OnBnClickedButton3()
 
 	if (!img_object.data) { std::cout << "Err: reading object image failed...\n"; }
 
-	cv::VideoCapture cap(0);
+	cv::VideoCapture cap(1);
 	//cap.set(CV_CAP_PROP_FRAME_WIDTH, 640);
 	//cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
 	//notice
@@ -766,7 +766,7 @@ void CStereoProjectDlg::OnBnClickedButton4()
 	char tipka;
 	char filename[100]; // For filename
 	int  c = 1; // For filename
-	VideoCapture video(0);	// org: 640 * 480
+	VideoCapture video(1);	// org: 640 * 480
 
 	video.set(CV_CAP_PROP_FRAME_WIDTH, CameraSizeW * 2);
 	video.set(CV_CAP_PROP_FRAME_HEIGHT, CameraSizeH);
@@ -866,7 +866,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 	CString szFileName = 0;
 
-	cv::VideoCapture video(0);	// org: 640 * 480
+	cv::VideoCapture video(1);	// org: 640 * 480
 
 	video.set(CV_CAP_PROP_FRAME_WIDTH, CameraSizeW * 2);
 	video.set(CV_CAP_PROP_FRAME_HEIGHT, CameraSizeH);
@@ -894,14 +894,14 @@ void CStereoProjectDlg::OnBnClickedButton5()
 	//NEW=== Create a Control Window and Trackbars
 	namedWindow("Control", 0);	// Control Window
 	resizeWindow("Control", 380, 300);
-	int iLowH = 17;
-	int iHighH = 54;
+	int iLowH = 14;//17;
+	int iHighH = 45;//54;
 
-	int iLowS = 54;
-	int iHighS = 201;
+	int iLowS = 133;//54;
+	int iHighS = 255;//201;
 
-	int iLowV = 91;
-	int iHighV = 255;
+	int iLowV = 46;//91;
+	int iHighV = 255;//255;
 
 	int erodeSize = 5;
 	int dilateSize = 15;
@@ -922,6 +922,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 	//-----socket--------
 	string confirm;
 	char message[1000];
+	int mode = 0;
 
 	//開始 Winsock-DLL
 	int r;
@@ -1142,8 +1143,14 @@ void CStereoProjectDlg::OnBnClickedButton5()
 		//----------socket send data to robot
 		//cout << distance << endl;
 		cout << distance <<","<<middleL<< endl;
-		sprintf(message, "%lf,%d", distance,middleL);
+		sprintf(message, "%lf,%d\n", distance,middleL);
 		send(sConnect, message, (int)strlen(message), 0);
+		char test[50];
+		memset(test, 0, sizeof(test));
+		recv(sConnect, test, sizeof(test), 0);
+		cout << "/******************************/received : " << test << endl;
+		mode = atoi(test);
+		break;
 		//----------------
 
 		// Show the Thresholded Image
