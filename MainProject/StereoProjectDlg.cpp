@@ -894,14 +894,14 @@ void CStereoProjectDlg::OnBnClickedButton5()
 	//NEW=== Create a Control Window and Trackbars
 	namedWindow("Control", 0);	// Control Window
 	resizeWindow("Control", 380, 300);
-	int iLowH = 14;//17;
-	int iHighH = 45;//54;
+	int iLowH[4] = { 14 ,100,110,100};//17;
+	int iHighH[4] = { 45 ,124,179,124};//54;
 
-	int iLowS = 133;//54;
-	int iHighS = 255;//201;
+	int iLowS[4] = { 133 ,135,73,135};//54;
+	int iHighS[4] = { 255 ,255,255,255};//201;
 
-	int iLowV = 46;//91;
-	int iHighV = 255;//255;
+	int iLowV[4] = { 100 ,18,91,18};//91;
+	int iHighV[4] = { 255 ,255,245,255};//255;
 
 	int erodeSize = 5;
 	int dilateSize = 15;
@@ -910,19 +910,21 @@ void CStereoProjectDlg::OnBnClickedButton5()
 	createTrackbar("dilate", "Control", &dilateSize, 50);
 
 	// Create Trackbars in Control Window
-	createTrackbar("LowH", "Control", &iLowH, 179);		//Hue (0 - 179)
-	createTrackbar("HighH", "Control", &iHighH, 179);
+	createTrackbar("LowH", "Control", &iLowH[0], 179);		//Hue (0 - 179)
+	createTrackbar("HighH", "Control", &iHighH[0], 179);
 
-	createTrackbar("LowS", "Control", &iLowS, 255);		//Saturation (0 - 255)
-	createTrackbar("HighS", "Control", &iHighS, 255);
+	createTrackbar("LowS", "Control", &iLowS[0], 255);		//Saturation (0 - 255)
+	createTrackbar("HighS", "Control", &iHighS[0], 255);
 
-	createTrackbar("LowV", "Control", &iLowV, 255);		//Value (0 - 255)
-	createTrackbar("HighV", "Control", &iHighV, 255);
+	createTrackbar("LowV", "Control", &iLowV[0], 255);		//Value (0 - 255)
+	createTrackbar("HighV", "Control", &iHighV[0], 255);
 
 	//-----socket--------
 	string confirm;
 	char message[1000];
 	int mode = 0;
+	int test_count = 0;
+	int change_flag = 0;
 
 	//開始 Winsock-DLL
 	int r;
@@ -956,7 +958,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 	else if (confirm == "Y")*/
 		connect(sConnect, (SOCKADDR*)&addr, sizeof(addr));
 	//-------------------
-
+	int index = 0;//HSV index
 		
 
 	while (1) {
@@ -1009,8 +1011,8 @@ void CStereoProjectDlg::OnBnClickedButton5()
 		//cvtColor(RImage, imgHSV_R, COLOR_BGR2HSV);
 		// Create the Thresholded Image 過濾出HSV圖 input: imgHSV ， output: imgThresholded
 		Mat imgThresholded_L, imgThresholded_R;
-		inRange(imgHSV_L, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded_L);
-		inRange(imgHSV_R, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded_R);
+		inRange(imgHSV_L, Scalar(iLowH[index], iLowS[index], iLowV[index]), Scalar(iHighH[index], iHighS[index], iHighV[index]), imgThresholded_L);
+		inRange(imgHSV_R, Scalar(iLowH[index], iLowS[index], iLowV[index]), Scalar(iHighH[index], iHighS[index], iHighV[index]), imgThresholded_R);
 
 
 		// Noise Reduction using Mathematical Morphology
@@ -1147,10 +1149,31 @@ void CStereoProjectDlg::OnBnClickedButton5()
 		send(sConnect, message, (int)strlen(message), 0);
 		char test[50];
 		memset(test, 0, sizeof(test));
-		recv(sConnect, test, sizeof(test), 0);
-		cout << "/******************************/received : " << test << endl;
-		mode = atoi(test);
-		break;
+
+		if (distance > 37 && middleL <= 320 && middleL >= 300) {
+			//recv(sConnect, test, sizeof(test), 0);
+			if (test_count > 20) {
+				cout << "/******************************/received : " << endl;
+			}
+			test_count = 0;
+			//mode = atoi(test);
+		}
+		if (distance <= 37 && middleL <= 315 + 10 && middleL >= 315 - 10) {
+			//recv(sConnect, test, sizeof(test), 0);
+			if (test_count > 30) {
+				cout << "/******************************/received : " << endl;
+			}
+			test_count++;
+			change_flag = 1;
+			//mode = atoi(test);
+		}
+		if (distance == -1 && middleL == 0 && change_flag == 1) {
+			cout << "/******************************CHANGE***************************/" << endl;
+			++index;
+			change_flag = 0;
+		}
+		
+		//break;
 		//----------------
 
 		// Show the Thresholded Image
