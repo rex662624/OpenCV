@@ -728,8 +728,10 @@ void CStereoProjectDlg::OnBnClickedButton3()
 
 		cv::Mat frame;
 
-		int inputoption = 1;
-
+		int inputoption = 3;
+		double TempNumber[5] = { 0 ,0,0,0,0};
+		int count=0;//記得每次change也要歸零
+		double PreviousFind=0;
 		for (;;) {
 			if (cap.grab() && !img_object.empty()) {
 				t = (double)cv::getTickCount();
@@ -972,8 +974,29 @@ void CStereoProjectDlg::OnBnClickedButton3()
 
 								double check = (scene_corners[1].x - scene_corners[0].x);
 
-								if (check>10)//消除雜訊用
-									cout << (double)(scene_corners[0].x + scene_corners[1].x) / 2 << endl;
+								if (check > 10)//消除雜訊用
+								{
+									TempNumber[count++] = (double)(scene_corners[0].x + scene_corners[1].x) / 2;
+									if (count == 4) {
+										double difference = (TempNumber[0] - TempNumber[1]) + (TempNumber[0] - TempNumber[2]) + (TempNumber[0] - TempNumber[3]);
+										//cout << TempNumber[0] << " , " << TempNumber[1] << " , " << TempNumber[2] << " , " << TempNumber[3] << " , " << TempNumber[4] << endl;
+										if (difference < 20 && difference >-20)
+										{
+											PreviousFind = (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4;
+											cout << "find，Position=" << (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4 << endl;
+										}
+										/*
+										if (PreviousFind != 0) {
+										double NowFind = (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4;
+										if((NowFind- PreviousFind)<70&& (NowFind - PreviousFind)>70)
+										cout << "find，Position=" << NowFind / (double)4 << endl;
+
+										}
+										*/
+										count = 0;
+									}
+									//cout << (double)(scene_corners[0].x + scene_corners[1].x) / 2 << endl;
+								}
 
 							}
 						}
@@ -1092,7 +1115,33 @@ void CStereoProjectDlg::OnBnClickedButton3()
 									output = 2;
 									reacNum = 65405;
 								}
+								double check = (scene_corners[1].x - scene_corners[0].x);
+
+								if (check > 10)//消除雜訊用
+								{
+									TempNumber[count++] = (double)(scene_corners[0].x + scene_corners[1].x) / 2;
+									if (count == 4) {
+										double difference = (TempNumber[0] - TempNumber[1]) + (TempNumber[0] - TempNumber[2]) + (TempNumber[0] - TempNumber[3]);
+										cout << TempNumber[0] << " , " << TempNumber[1] << " , " << TempNumber[2] << " , " << TempNumber[3] << " , " << TempNumber[4] << endl;
+										if (difference < 20&& difference >-20)
+										{
+											PreviousFind= (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4;
+											cout << "find，Position=" << (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4<< endl;
+										}
+										/*
+										if (PreviousFind != 0) {
+											double NowFind = (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4;
+											if((NowFind- PreviousFind)<70&& (NowFind - PreviousFind)>70)
+												cout << "find，Position=" << NowFind / (double)4 << endl;
+
+										}
+										*/
+										count = 0;
+									}
+									//cout << (double)(scene_corners[0].x + scene_corners[1].x) / 2 << endl;
+								}
 							}
+
 						}
 					}
 
@@ -1209,6 +1258,31 @@ void CStereoProjectDlg::OnBnClickedButton3()
 								if (t1 > 40000 || t2 > 40000 || t3 > 40000 || t4 > 40000) {
 									output = 3;
 									reacNum = 65203;
+								}
+								double check = (scene_corners[1].x - scene_corners[0].x);
+
+								if (check > 10)//消除雜訊用
+								{
+									TempNumber[count++] = (double)(scene_corners[0].x + scene_corners[1].x) / 2;
+									if (count == 4) {
+										double difference = (TempNumber[0] - TempNumber[1]) + (TempNumber[0] - TempNumber[2]) + (TempNumber[0] - TempNumber[3]);
+										//cout << TempNumber[0] << " , " << TempNumber[1] << " , " << TempNumber[2] << " , " << TempNumber[3] << " , " << TempNumber[4] << endl;
+										if (difference < 20 && difference >-20)
+										{
+											PreviousFind = (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4;
+											cout << "find，Position=" << (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4 << endl;
+										}
+										/*
+										if (PreviousFind != 0) {
+										double NowFind = (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4;
+										if((NowFind- PreviousFind)<70&& (NowFind - PreviousFind)>70)
+										cout << "find，Position=" << NowFind / (double)4 << endl;
+
+										}
+										*/
+										count = 0;
+									}
+									//cout << (double)(scene_corners[0].x + scene_corners[1].x) / 2 << endl;
 								}
 							}
 
