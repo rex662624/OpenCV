@@ -6,6 +6,7 @@
 #include "StereoProject.h"
 #include "StereoProjectDlg.h"
 #include "afxdialogex.h"
+#include "InputNumber.h"
 #include "opencv2\highgui\highgui.hpp"
 #include <stdio.h>
 #include <stdlib.h>
@@ -617,23 +618,23 @@ void CStereoProjectDlg::OnBnClickedButton3()
 	// http://stackoverflow.com/a/11798593
 	//if(descriptors_object.type() != CV_32F)
 	//    descriptors_object.convertTo(descriptors_object, CV_32F);
-	
-	
+
+
 
 	cv::Mat frame;
 	for (;;) {
 		if (cap.grab() && !img_object.empty()) {
-			
+
 			t = (double)cv::getTickCount();
 			cap.retrieve(frame, 0);
 
 			//cap >> frame;
 
 			if (!frame.empty()) {
-				cv::resize(frame, frame, cv::Size(640,240),CV_INTER_AREA);
+				//cv::resize(frame, frame, cv::Size(640,240),CV_INTER_AREA);
 
 				cv::Mat LImage, img_scene;
-				cv::Rect Lrect(0, 0, 320, 240);
+				cv::Rect Lrect(0, 0, 640, 480);
 				frame(Lrect).copyTo(LImage);
 				//cv::cvtColor(LImage, greyLImage, CV_BGR2GRAY);
 
@@ -876,7 +877,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 		// 檢查是否初始化成功，如果成功返回true，否則返回false
 		return;
 	}
-	cv::Mat leftFrame, rightFrame;
+	cv::Mat leftFrame, rightFrame, frame;
 
 	// ======================================
 
@@ -894,14 +895,14 @@ void CStereoProjectDlg::OnBnClickedButton5()
 	//NEW=== Create a Control Window and Trackbars
 	namedWindow("Control", 0);	// Control Window
 	resizeWindow("Control", 380, 300);
-	int iLowH[4] = { 14 ,100,110,100};//17;
-	int iHighH[4] = { 45 ,124,179,124};//54;
+	int iLowH[4] = { 14 ,100,110,100 };//17;
+	int iHighH[4] = { 45 ,124,179,124 };//54;
 
-	int iLowS[4] = { 133 ,135,73,135};//54;
-	int iHighS[4] = { 255 ,255,255,255};//201;
+	int iLowS[4] = { 133 ,135,73,135 };//54;
+	int iHighS[4] = { 255 ,255,255,255 };//201;
 
-	int iLowV[4] = { 100 ,18,91,18};//91;
-	int iHighV[4] = { 255 ,255,245,255};//255;
+	int iLowV[4] = { 100 ,18,91,18 };//91;
+	int iHighV[4] = { 255 ,255,245,255 };//255;
 
 	int erodeSize = 5;
 	int dilateSize = 15;
@@ -954,22 +955,159 @@ void CStereoProjectDlg::OnBnClickedButton5()
 	cin >> confirm;
 
 	if (confirm == "N")
-		exit(1);
+	exit(1);
 	else if (confirm == "Y")*/
-		connect(sConnect, (SOCKADDR*)&addr, sizeof(addr));
+	connect(sConnect, (SOCKADDR*)&addr, sizeof(addr));
+
 	//-------------------
-	int index = 0;//HSV index
-		
+	int index = 0;//HSV index 目前跑到第幾趟
+
+				  //=======數字辨識部分宣告===
+
+	int output = 0;
+	int  userpic1 = 0, userpic2 = 0; // For filename
+	InputNumber NumDiag1, NumDiag2;
+
+	cv::Mat srcMat = cv::imread("65304.png", cv::IMREAD_GRAYSCALE);
+	cv::Mat img_object;
+
+	int ct = 0;
+	char tipka;
+	char filename[100]; // For filename
+	cv::resize(srcMat, img_object, cv::Size(srcMat.cols / 4, srcMat.rows / 4));
+
+	if (!img_object.data) { std::cout << "Err: reading object image failed...\n"; }
+
+
+	cv::Mat blackMat = cv::imread("userPic/black.jpg", cv::IMREAD_GRAYSCALE);
+	// ===================== img2 =============================
+	cv::Mat srcMat2 = cv::imread("65405.png", cv::IMREAD_GRAYSCALE);
+	cv::Mat img_object2;
+	cv::resize(srcMat2, img_object2, cv::Size(srcMat2.cols / 4, srcMat2.rows / 4));
+	if (!img_object2.data) { std::cout << "Err: reading object image failed...\n"; }
+	// =======================================================
+	// ===================== img3 =============================
+	cv::Mat srcMat3 = cv::imread("65203.png", cv::IMREAD_GRAYSCALE);
+	cv::Mat img_object3;
+	cv::resize(srcMat3, img_object3, cv::Size(srcMat3.cols / 4, srcMat3.rows / 4));
+	if (!img_object3.data) { std::cout << "Err: reading object image failed...\n"; }
+	// =======================================================
+	// ===================== userpic1 =============================
+	cv::Mat srcMat4 = cv::imread("userPic/userPic1.png", cv::IMREAD_GRAYSCALE);
+	cv::Mat img_object4;
+	cv::resize(srcMat4, img_object4, cv::Size(srcMat4.cols / 1, srcMat4.rows / 1));
+	if (!img_object4.data) { std::cout << "Err: reading object image failed...\n"; }
+	// =======================================================
+	// ===================== userpic2 =============================
+	cv::Mat srcMat5 = cv::imread("userPic/userPic2.png", cv::IMREAD_GRAYSCALE);
+	cv::Mat img_object5;
+	cv::resize(srcMat5, img_object5, cv::Size(srcMat5.cols / 1, srcMat5.rows / 1));
+	if (!img_object5.data) { std::cout << "Err: reading object image failed...\n"; }
+	// =======================================================
+
+	char* method = "0";
+
+	std::vector<cv::KeyPoint> keypoints_object, keypoints_scene;
+	cv::Mat descriptors_object, descriptors_scene;
+
+	cv::ORB orb;
+
+	int minHessian = 400;
+	cv::SurfFeatureDetector detector(minHessian);
+	cv::SurfDescriptorExtractor extractor;
+
+	// ======================= img2 =======================
+	std::vector<cv::KeyPoint> keypoints_object2, keypoints_scene2;
+	cv::Mat descriptors_object2, descriptors_scene2;
+	cv::ORB orb2;
+	cv::SurfFeatureDetector detector2(minHessian);
+	cv::SurfDescriptorExtractor extractor2;
+	// ====================================================
+	// ======================= img3 =======================
+	std::vector<cv::KeyPoint> keypoints_object3, keypoints_scene3;
+	cv::Mat descriptors_object3, descriptors_scene3;
+	cv::ORB orb3;
+	cv::SurfFeatureDetector detector3(minHessian);
+	cv::SurfDescriptorExtractor extractor3;
+	// ====================================================
+	// ======================= userpic1 =======================
+	std::vector<cv::KeyPoint> keypoints_object4, keypoints_scene4;
+	cv::Mat descriptors_object4, descriptors_scene4;
+	cv::ORB orb4;
+	cv::SurfFeatureDetector detector4(minHessian);
+	cv::SurfDescriptorExtractor extractor4;
+	// ====================================================
+	// ======================= userpic2 =======================
+	std::vector<cv::KeyPoint> keypoints_object5, keypoints_scene5;
+	cv::Mat descriptors_object5, descriptors_scene5;
+	cv::ORB orb5;
+	cv::SurfFeatureDetector detector5(minHessian);
+	cv::SurfDescriptorExtractor extractor5;
+
+	//-- object
+	if (method == 0) { //-- ORB
+		orb.detect(img_object, keypoints_object);
+		orb.compute(img_object, keypoints_object, descriptors_object);
+		// ========================= img2 =======================
+		orb2.detect(img_object2, keypoints_object2);
+		orb2.compute(img_object2, keypoints_object2, descriptors_object2);
+		// ======================================================
+		// ========================= img3 =======================
+		orb3.detect(img_object3, keypoints_object3);
+		orb3.compute(img_object3, keypoints_object3, descriptors_object3);
+		// ======================================================
+		if (userpic1 == 1) {
+			// ========================= img4 =======================
+			orb4.detect(img_object4, keypoints_object4);
+			orb4.compute(img_object4, keypoints_object4, descriptors_object4);
+			// ======================================================
+		}
+		if (userpic2 == 1) {
+			// ========================= img5 =======================
+			orb5.detect(img_object5, keypoints_object5);
+			orb5.compute(img_object5, keypoints_object5, descriptors_object5);
+			// ======================================================
+		}
+	}
+	else { //-- SURF test
+		detector.detect(img_object, keypoints_object);
+		extractor.compute(img_object, keypoints_object, descriptors_object);
+		// ========================= img2 =======================
+		detector2.detect(img_object2, keypoints_object2);
+		extractor2.compute(img_object2, keypoints_object2, descriptors_object2);
+		// ======================================================
+		// ========================= img3 =======================
+		detector3.detect(img_object3, keypoints_object3);
+		extractor3.compute(img_object3, keypoints_object3, descriptors_object3);
+		// ======================================================
+		// ========================= img4 =======================
+		if (userpic1 == 1) {
+			detector4.detect(img_object4, keypoints_object4);
+			extractor4.compute(img_object4, keypoints_object4, descriptors_object4);
+		}
+		// ======================================================
+		// ========================= img5 =======================
+		if (userpic2 == 1) {
+			detector5.detect(img_object5, keypoints_object5);
+			extractor5.compute(img_object5, keypoints_object5, descriptors_object5);
+		}
+		// ======================================================
+	}
+	// http://stackoverflow.com/a/11798593
+	//if(descriptors_object.type() != CV_32F)
+	//    descriptors_object.convertTo(descriptors_object, CV_32F);
+
+	//=======宣告完成 開始迴圈
 
 	while (1) {
 
-		int middleL=0, middleR=0;//左右視野中圖形的中點座標
+		int middleL = 0, middleR = 0;//左右視野中圖形的中點座標
 
-		// TODO: 在此加入控制項告知處理常式程式碼
+									 // TODO: 在此加入控制項告知處理常式程式碼
 
 		if (!video.grab())
 			break;
-		video.retrieve(leftFrame, 0);
+		video.retrieve(frame, 0);
 
 		//if (!leftFrame.empty())
 		//	continue;
@@ -978,12 +1116,12 @@ void CStereoProjectDlg::OnBnClickedButton5()
 		// https://blog.csdn.net/icvpr/article/details/8518863
 		cv::Mat RImage, greyRImage;
 		cv::Rect Rrect(0, 0, CameraSizeW, CameraSizeH);
-		leftFrame(Rrect).copyTo(RImage);
+		frame(Rrect).copyTo(RImage);
 		img2r = &CvMat(RImage);
 
 		cv::Mat LImage, greyLImage;
 		cv::Rect Lrect(CameraSizeW, 0, CameraSizeW, CameraSizeH);
-		leftFrame(Lrect).copyTo(LImage);
+		frame(Lrect).copyTo(LImage);
 		img1r = &CvMat(LImage);
 
 		cvRemap(img1r, img1r, L_mapx, L_mapy);	// Performs generic geometric transformation using the specified coordinate maps
@@ -1036,8 +1174,8 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 		//===================================把最大的框住
 
-		int DR = contourFilter(RImage_after, imgThresholded_R,&middleL);
-		int DL = contourFilter(LImage_after, imgThresholded_L,&middleR);
+		int DR = contourFilter(RImage_after, imgThresholded_R, &middleL);
+		int DL = contourFilter(LImage_after, imgThresholded_L, &middleR);
 		//=========
 
 		// Calculate the Moments of the Thresholded Image
@@ -1055,7 +1193,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 		double distance = -1;//尚未偵測東西
 
-		// If the area <= 10000, consider that it's because of the noise
+							 // If the area <= 10000, consider that it's because of the noise
 		if (dArea_L > 10000 && dArea_R > 10000)
 		{
 			// Calculate the Centroid of the Object 算物體的質心
@@ -1115,7 +1253,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 				average1 += disparity;
 				average2 += distance;
 				count++;
-				
+
 			}
 			else {
 				average1 /= (double)size;
@@ -1141,11 +1279,507 @@ void CStereoProjectDlg::OnBnClickedButton5()
 			drawContours(imgLines, contours, i, Scalar(0, 0, 255), 2);
 			}*/
 		}
+		//=================以上是偵測顏色距離 這裡開始辨識數字
+		if ((index % 2) != 0)//如果是回程才要辨識數字
+		{
 
+			//8/20
+			//cv::resize(frame, frame, cv::Size(640, 240), CV_INTER_AREA);
+
+			int reacNum = -1;
+			output = 0;
+			cv::Mat LImage, img_scene;
+			cv::Rect Lrect(0, 0, 640, 480);
+			frame(Lrect).copyTo(LImage);
+			//cv::cvtColor(LImage, greyLImage, CV_BGR2GRAY);
+
+			cv::cvtColor(LImage, img_scene, CV_BGR2GRAY);
+
+			cv::Mat greyFrame(1280, 480, CV_8UC3);
+			cv::Mat LImage2(1280, 480, CV_8UC3);
+			cv::Mat tmp(1280, 480, CV_8UC3);
+			/*
+			frame(Lrect2).copyTo(LImage2);
+			cv::cvtColor(LImage2, greyFrame, CV_BGR2GRAY);
+			*/
+
+			cv::Rect Lrect2(0, 0, 640, 480);
+			cv::Rect Lrect3(0, 0, 640, 480);
+			Mat matDst(Size(frame(Lrect2).cols * 2, frame(Lrect2).rows), frame(Lrect2).type(), Scalar::all(0));
+			Mat matRoi = matDst(Rect(0, 0, frame(Lrect2).cols, frame(Lrect2).rows));
+			frame(Lrect2).copyTo(matRoi);
+			matRoi = matDst(Rect(frame(Lrect2).cols, 0, frame(Lrect2).cols, frame(Lrect2).rows));
+			//problem
+			blackMat(Lrect3).copyTo(matRoi);
+
+			cv::cvtColor(matDst, greyFrame, 0);
+
+			if (method == 0) { //-- ORB
+				if (index == 1) {
+					orb.detect(img_scene, keypoints_scene);
+					orb.compute(img_scene, keypoints_scene, descriptors_scene);
+				}
+				// ======================= img2 ======================
+				else if (index == 3) {
+					orb2.detect(img_scene, keypoints_scene2);
+					orb2.compute(img_scene, keypoints_scene2, descriptors_scene2);
+				}
+				// ====================================================
+				// ======================= img3 ======================
+				else if (index == 5) {
+					orb3.detect(img_scene, keypoints_scene3);
+					orb3.compute(img_scene, keypoints_scene3, descriptors_scene3);
+				}
+				// ====================================================
+				// ======================= img4 ======================
+				if (userpic1 == 1) {
+					orb4.detect(img_scene, keypoints_scene4);
+					orb4.compute(img_scene, keypoints_scene4, descriptors_scene4);
+				}
+				// ====================================================
+				// ======================= img5 ======================
+				if (userpic2 == 1) {
+					orb5.detect(img_scene, keypoints_scene5);
+					orb5.compute(img_scene, keypoints_scene5, descriptors_scene5);
+				}
+				// ====================================================
+			}
+			else { //-- SURF
+				detector.detect(img_scene, keypoints_scene);
+				extractor.compute(img_scene, keypoints_scene, descriptors_scene);
+				// ======================= img2 ======================
+				detector2.detect(img_scene, keypoints_scene2);
+				extractor2.compute(img_scene, keypoints_scene2, descriptors_scene2);
+				// ====================================================
+				// ======================= img3 ======================
+				detector3.detect(img_scene, keypoints_scene3);
+				extractor3.compute(img_scene, keypoints_scene3, descriptors_scene3);
+				// ====================================================
+				// ======================= img4 ======================
+				if (userpic1 == 1) {
+					detector4.detect(img_scene, keypoints_scene4);
+					extractor4.compute(img_scene, keypoints_scene4, descriptors_scene4);
+				}
+				// ====================================================
+				// ======================= img5 ======================
+				if (userpic2 == 1) {
+					detector5.detect(img_scene, keypoints_scene5);
+					extractor5.compute(img_scene, keypoints_scene5, descriptors_scene5);
+				}
+				// ====================================================
+			}
+
+			//-- matching descriptor vectors using FLANN matcher
+			cv::FlannBasedMatcher matcher;
+			std::vector<cv::DMatch> matches;
+			cv::Mat img_matches;
+			// ======================= img2 ======================
+			cv::FlannBasedMatcher matcher2;
+			std::vector<cv::DMatch> matches2;
+			cv::Mat img_matches2;
+			// ====================================================
+			// ======================= img3 ======================
+			cv::FlannBasedMatcher matcher3;
+			std::vector<cv::DMatch> matches3;
+			cv::Mat img_matches3;
+			// ====================================================
+			// ======================= img4 ======================
+			cv::FlannBasedMatcher matcher4;
+			std::vector<cv::DMatch> matches4;
+			cv::Mat img_matches4;
+			// ====================================================
+			// ======================= img5 ======================
+			cv::FlannBasedMatcher matcher5;
+			std::vector<cv::DMatch> matches5;
+			cv::Mat img_matches5;
+			// ====================================================
+
+			cv::Point p11, p12, p13, p14;
+			cv::Point p21, p22, p23, p24;
+			cv::Point p31, p32, p33, p34;
+			cv::Point p41, p42, p43, p44;
+			cv::Point p51, p52, p53, p54;
+			//int t1, t2, t3, t4;
+
+			// =========================img1===========================
+
+			if (index == 1 && !descriptors_object.empty() && !descriptors_scene.empty()) {
+				matcher.match(descriptors_object, descriptors_scene, matches);
+
+				//output = 0;
+				double max_dist = 0; double min_dist = 100;
+
+				//-- Quick calculation of max and min idstance between keypoints
+				for (int i = 0; i < descriptors_object.rows; i++)
+				{
+					double dist = matches[i].distance;
+					if (dist < min_dist) min_dist = dist;
+					if (dist > max_dist) max_dist = dist;
+				}
+				//printf("-- Max dist : %f \n", max_dist );
+				//printf("-- Min dist : %f \n", min_dist );
+				//-- Draw only good matches (i.e. whose distance is less than 3*min_dist)
+				std::vector< cv::DMatch >good_matches;
+
+				for (int i = 0; i < descriptors_object.rows; i++)
+				{
+					if (matches[i].distance < 3 * min_dist)
+					{
+						good_matches.push_back(matches[i]);
+					}
+				}
+
+				cv::drawMatches(img_object, keypoints_object, img_scene, keypoints_scene, \
+					good_matches, img_matches, cv::Scalar::all(-1), cv::Scalar::all(-1),
+					std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+				// drawMatches: https://blog.csdn.net/lihuacui/article/details/56667342
+				//-- localize the object
+				std::vector<cv::Point2f> obj;
+				std::vector<cv::Point2f> scene;
+
+				for (size_t i = 0; i < good_matches.size(); i++) {
+					//-- get the keypoints from the good matches
+					obj.push_back(keypoints_object[good_matches[i].queryIdx].pt);
+					scene.push_back(keypoints_scene[good_matches[i].trainIdx].pt);
+				}
+
+				if (!obj.empty() && !scene.empty() && good_matches.size() >= 4) {
+					cv::Mat H = cv::findHomography(obj, scene, cv::RANSAC);
+
+					//-- get the corners from the object to be detected
+					std::vector<cv::Point2f> obj_corners(4);
+					obj_corners[0] = cv::Point(0, 0);
+					obj_corners[1] = cv::Point(img_object.cols, 0);
+					obj_corners[2] = cv::Point(img_object.cols, img_object.rows);
+					obj_corners[3] = cv::Point(0, img_object.rows);
+
+					std::vector<cv::Point2f> scene_corners(4);
+
+					cv::perspectiveTransform(obj_corners, scene_corners, H);
+
+					//-- Draw lines between the corners (the mapped object in the scene - image_2 )
+					cv::line(img_matches, \
+						scene_corners[0] + cv::Point2f(img_object.cols, 0), \
+						scene_corners[1] + cv::Point2f(img_object.cols, 0), \
+						cv::Scalar(255, 0, 0), 4);
+					cv::line(img_matches, \
+						scene_corners[1] + cv::Point2f(img_object.cols, 0), \
+						scene_corners[2] + cv::Point2f(img_object.cols, 0), \
+						cv::Scalar(255, 0, 0), 4);
+					cv::line(img_matches, \
+						scene_corners[2] + cv::Point2f(img_object.cols, 0), \
+						scene_corners[3] + cv::Point2f(img_object.cols, 0), \
+						cv::Scalar(255, 0, 0), 4);
+					cv::line(img_matches, \
+						scene_corners[3] + cv::Point2f(img_object.cols, 0), \
+						scene_corners[0] + cv::Point2f(img_object.cols, 0), \
+						cv::Scalar(255, 0, 0), 4);
+
+					// =============== imshow opt ===============================
+					cv::line(greyFrame, \
+						scene_corners[0], \
+						scene_corners[1], \
+						cv::Scalar(255, 0, 0), 4);
+					cv::line(greyFrame, \
+						scene_corners[1], \
+						scene_corners[2], \
+						cv::Scalar(255, 0, 0), 4);
+					cv::line(greyFrame, \
+						scene_corners[2], \
+						scene_corners[3], \
+						cv::Scalar(255, 0, 0), 4);
+					cv::line(greyFrame, \
+						scene_corners[3], \
+						scene_corners[0], \
+						cv::Scalar(255, 0, 0), 4);
+					// =========================================================
+
+					p11 = scene_corners[0] + cv::Point2f(img_object.cols, 0);
+					p12 = scene_corners[1] + cv::Point2f(img_object.cols, 0);
+					p13 = scene_corners[2] + cv::Point2f(img_object.cols, 0);
+					p14 = scene_corners[3] + cv::Point2f(img_object.cols, 0);
+					if (p11 != p12 && p12 != p13 && p13 != p14) {
+						cv::Point tmp1 = p11 - p12;
+						cv::Point tmp2 = p12 - p13;
+						cv::Point tmp3 = p13 - p14;
+						cv::Point tmp4 = p14 - p11;
+
+						int t1 = pow(tmp1.x, 2) + pow(tmp1.y, 2);
+						int t2 = pow(tmp2.x, 2) + pow(tmp1.y, 2);
+						int t3 = pow(tmp3.x, 2) + pow(tmp1.y, 2);
+						int t4 = pow(tmp4.x, 2) + pow(tmp1.y, 2);
+						if (t1 > 40000 || t2 > 40000 || t3 > 40000 || t4 > 40000) {
+							output = 1;
+							reacNum = 65304;
+						}
+
+					}
+					double check = (scene_corners[1].x - scene_corners[0].x);
+					if (check>10)//消除雜訊用
+								 //cout << (double)(scene_corners[0].x + scene_corners[1].x) / 2 << endl;
+						middleL = (int)(scene_corners[0].x + scene_corners[1].x) / 2;
+				}
+			}
+
+			// ============================ img2 ====================
+
+			if (index == 3 && !descriptors_object2.empty() && !descriptors_scene2.empty()) {
+				matcher2.match(descriptors_object2, descriptors_scene2, matches2);
+
+				//output = 0;
+				double max_dist = 0; double min_dist = 100;
+
+				//-- Quick calculation of max and min idstance between keypoints
+				for (int i = 0; i < descriptors_object2.rows; i++)
+				{
+					double dist = matches2[i].distance;
+					if (dist < min_dist) min_dist = dist;
+					if (dist > max_dist) max_dist = dist;
+				}
+				//printf("-- Max dist : %f \n", max_dist );
+				//printf("-- Min dist : %f \n", min_dist );
+				//-- Draw only good matches (i.e. whose distance is less than 3*min_dist)
+				std::vector< cv::DMatch >good_matches;
+
+				for (int i = 0; i < descriptors_object2.rows; i++)
+				{
+					if (matches2[i].distance < 3 * min_dist)
+					{
+						good_matches.push_back(matches2[i]);
+					}
+				}
+
+				cv::drawMatches(img_object2, keypoints_object2, img_scene, keypoints_scene2, \
+					good_matches, img_matches2, cv::Scalar::all(-1), cv::Scalar::all(-1),
+					std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+				// drawMatches: https://blog.csdn.net/lihuacui/article/details/56667342
+				//-- localize the object
+				std::vector<cv::Point2f> obj;
+				std::vector<cv::Point2f> scene;
+
+				for (size_t i = 0; i < good_matches.size(); i++) {
+					//-- get the keypoints from the good matches
+					obj.push_back(keypoints_object2[good_matches[i].queryIdx].pt);
+					scene.push_back(keypoints_scene2[good_matches[i].trainIdx].pt);
+				}
+
+				if (!obj.empty() && !scene.empty() && good_matches.size() >= 4) {
+					cv::Mat H = cv::findHomography(obj, scene, cv::RANSAC);
+
+					//-- get the corners from the object to be detected
+					std::vector<cv::Point2f> obj_corners(4);
+					obj_corners[0] = cv::Point(0, 0);
+					obj_corners[1] = cv::Point(img_object2.cols, 0);
+					obj_corners[2] = cv::Point(img_object2.cols, img_object2.rows);
+					obj_corners[3] = cv::Point(0, img_object2.rows);
+
+					std::vector<cv::Point2f> scene_corners(4);
+
+					cv::perspectiveTransform(obj_corners, scene_corners, H);
+
+					//-- Draw lines between the corners (the mapped object in the scene - image_2 )
+					cv::line(img_matches2, \
+						scene_corners[0] + cv::Point2f(img_object2.cols, 0), \
+						scene_corners[1] + cv::Point2f(img_object2.cols, 0), \
+						cv::Scalar(0, 255, 0), 4);
+					cv::line(img_matches2, \
+						scene_corners[1] + cv::Point2f(img_object2.cols, 0), \
+						scene_corners[2] + cv::Point2f(img_object2.cols, 0), \
+						cv::Scalar(0, 255, 0), 4);
+					cv::line(img_matches2, \
+						scene_corners[2] + cv::Point2f(img_object2.cols, 0), \
+						scene_corners[3] + cv::Point2f(img_object2.cols, 0), \
+						cv::Scalar(0, 255, 0), 4);
+					cv::line(img_matches2, \
+						scene_corners[3] + cv::Point2f(img_object2.cols, 0), \
+						scene_corners[0] + cv::Point2f(img_object2.cols, 0), \
+						cv::Scalar(0, 255, 0), 4);
+
+					// =================== imshow opt =============================
+					cv::line(greyFrame, \
+						scene_corners[0], \
+						scene_corners[1], \
+						cv::Scalar(0, 255, 0), 4);
+					cv::line(greyFrame, \
+						scene_corners[1], \
+						scene_corners[2], \
+						cv::Scalar(0, 255, 0), 4);
+					cv::line(greyFrame, \
+						scene_corners[2], \
+						scene_corners[3], \
+						cv::Scalar(0, 255, 0), 4);
+					cv::line(greyFrame, \
+						scene_corners[3], \
+						scene_corners[0], \
+						cv::Scalar(0, 255, 0), 4);
+
+					// ============================================================
+
+					p21 = scene_corners[0] + cv::Point2f(img_object2.cols, 0);
+					p22 = scene_corners[1] + cv::Point2f(img_object2.cols, 0);
+					p23 = scene_corners[2] + cv::Point2f(img_object2.cols, 0);
+					p24 = scene_corners[3] + cv::Point2f(img_object2.cols, 0);
+
+					if (p21 != p22 && p22 != p23 && p23 != p24) {
+						cv::Point tmp1 = p21 - p22;
+						cv::Point tmp2 = p22 - p23;
+						cv::Point tmp3 = p23 - p24;
+						cv::Point tmp4 = p24 - p21;
+
+						int t1 = pow(tmp1.x, 2) + pow(tmp1.y, 2);
+						int t2 = pow(tmp2.x, 2) + pow(tmp1.y, 2);
+						int t3 = pow(tmp3.x, 2) + pow(tmp1.y, 2);
+						int t4 = pow(tmp4.x, 2) + pow(tmp1.y, 2);
+						if (t1 > 40000 || t2 > 40000 || t3 > 40000 || t4 > 40000) {
+							output = 2;
+							reacNum = 65405;
+						}
+					}
+					double check = (scene_corners[1].x - scene_corners[0].x);
+					if (check>10)//消除雜訊用
+								 //cout << (double)(scene_corners[0].x + scene_corners[1].x) / 2 << endl;
+						middleL = (int)(scene_corners[0].x + scene_corners[1].x) / 2;
+				}
+			}
+
+			// =====================================================
+			// ============================ img3 ====================
+
+			if (index == 5 && !descriptors_object3.empty() && !descriptors_scene3.empty()) {
+				matcher3.match(descriptors_object3, descriptors_scene3, matches3);
+
+				//output = 0;
+				double max_dist = 0; double min_dist = 100;
+
+				//-- Quick calculation of max and min idstance between keypoints
+				for (int i = 0; i < descriptors_object3.rows; i++)
+				{
+					double dist = matches3[i].distance;
+					if (dist < min_dist) min_dist = dist;
+					if (dist > max_dist) max_dist = dist;
+				}
+				//printf("-- Max dist : %f \n", max_dist );
+				//printf("-- Min dist : %f \n", min_dist );
+				//-- Draw only good matches (i.e. whose distance is less than 3*min_dist)
+				std::vector< cv::DMatch >good_matches;
+
+				for (int i = 0; i < descriptors_object3.rows; i++)
+				{
+					if (matches3[i].distance < 3 * min_dist)
+					{
+						good_matches.push_back(matches3[i]);
+					}
+				}
+
+				cv::drawMatches(img_object3, keypoints_object3, img_scene, keypoints_scene3, \
+					good_matches, img_matches3, cv::Scalar::all(-1), cv::Scalar::all(-1),
+					std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+				// drawMatches: https://blog.csdn.net/lihuacui/article/details/56667342
+				//-- localize the object
+				std::vector<cv::Point2f> obj;
+				std::vector<cv::Point2f> scene;
+
+				for (size_t i = 0; i < good_matches.size(); i++) {
+					//-- get the keypoints from the good matches
+					obj.push_back(keypoints_object3[good_matches[i].queryIdx].pt);
+					scene.push_back(keypoints_scene3[good_matches[i].trainIdx].pt);
+				}
+
+				if (!obj.empty() && !scene.empty() && good_matches.size() >= 4) {
+					cv::Mat H = cv::findHomography(obj, scene, cv::RANSAC);
+
+					//-- get the corners from the object to be detected
+					std::vector<cv::Point2f> obj_corners(4);
+					obj_corners[0] = cv::Point(0, 0);
+					obj_corners[1] = cv::Point(img_object3.cols, 0);
+					obj_corners[2] = cv::Point(img_object3.cols, img_object3.rows);
+					obj_corners[3] = cv::Point(0, img_object3.rows);
+
+					std::vector<cv::Point2f> scene_corners(4);
+
+					cv::perspectiveTransform(obj_corners, scene_corners, H);
+
+					//-- Draw lines between the corners (the mapped object in the scene - image_2 )
+					cv::line(img_matches3, \
+						scene_corners[0] + cv::Point2f(img_object3.cols, 0), \
+						scene_corners[1] + cv::Point2f(img_object3.cols, 0), \
+						cv::Scalar(0, 0, 255), 4);
+					cv::line(img_matches3, \
+						scene_corners[1] + cv::Point2f(img_object3.cols, 0), \
+						scene_corners[2] + cv::Point2f(img_object3.cols, 0), \
+						cv::Scalar(0, 0, 255), 4);
+					cv::line(img_matches3, \
+						scene_corners[2] + cv::Point2f(img_object3.cols, 0), \
+						scene_corners[3] + cv::Point2f(img_object3.cols, 0), \
+						cv::Scalar(0, 0, 255), 4);
+					cv::line(img_matches3, \
+						scene_corners[3] + cv::Point2f(img_object3.cols, 0), \
+						scene_corners[0] + cv::Point2f(img_object3.cols, 0), \
+						cv::Scalar(0, 0, 255), 4);
+
+					// ===================== imshow opt =======================
+					cv::line(greyFrame, \
+						scene_corners[0], \
+						scene_corners[1], \
+						cv::Scalar(0, 0, 255), 4);
+					cv::line(greyFrame, \
+						scene_corners[1], \
+						scene_corners[2], \
+						cv::Scalar(0, 0, 255), 4);
+					cv::line(greyFrame, \
+						scene_corners[2], \
+						scene_corners[3], \
+						cv::Scalar(0, 0, 255), 4);
+					cv::line(greyFrame, \
+						scene_corners[3], \
+						scene_corners[0], \
+						cv::Scalar(0, 0, 255), 4);
+
+					// ========================================================
+
+					p31 = scene_corners[0] + cv::Point2f(img_object3.cols, 0);
+					p32 = scene_corners[1] + cv::Point2f(img_object3.cols, 0);
+					p33 = scene_corners[2] + cv::Point2f(img_object3.cols, 0);
+					p34 = scene_corners[3] + cv::Point2f(img_object3.cols, 0);
+
+					if (p31 != p32 && p32 != p33 && p33 != p34) {
+						cv::Point tmp1 = p31 - p32;
+						cv::Point tmp2 = p32 - p33;
+						cv::Point tmp3 = p33 - p34;
+						cv::Point tmp4 = p34 - p31;
+
+						int t1 = pow(tmp1.x, 2) + pow(tmp1.y, 2);
+						int t2 = pow(tmp2.x, 2) + pow(tmp1.y, 2);
+						int t3 = pow(tmp3.x, 2) + pow(tmp1.y, 2);
+						int t4 = pow(tmp4.x, 2) + pow(tmp1.y, 2);
+						if (t1 > 40000 || t2 > 40000 || t3 > 40000 || t4 > 40000) {
+							output = 3;
+							reacNum = 65203;
+						}
+					}
+
+
+					double check = (scene_corners[1].x - scene_corners[0].x);
+					if (check>10)//消除雜訊用
+								 //cout << (double)(scene_corners[0].x + scene_corners[1].x) / 2 << endl;
+						middleL = (int)(scene_corners[0].x + scene_corners[1].x) / 2;
+
+				}
+			}
+
+			//======================================================
+			if (!greyFrame.empty())
+				cv::imshow("Match result", greyFrame);
+
+			//Sleep(5); // Sleep is mandatory - for no leg!
+
+
+		}
+		//============================以上是辨識數字 開始傳送資料給robot
 		//----------socket send data to robot
 		//cout << distance << endl;
-		cout << distance <<","<<middleL<< endl;
-		sprintf(message, "%lf,%d\n", distance,middleL);
+		cout << distance << "," << middleL << endl;
+		sprintf(message, "%lf,%d\n", distance, middleL);
 		send(sConnect, message, (int)strlen(message), 0);
 		char test[50];
 		memset(test, 0, sizeof(test));
@@ -1158,9 +1792,9 @@ void CStereoProjectDlg::OnBnClickedButton5()
 			test_count = 0;
 			//mode = atoi(test);
 		}
-		if (distance <= 37 && middleL <= 315 + 10 && middleL >= 315 - 10) {
+		if (distance <= 37 && middleL <= 315 + 10 && middleL >= 315 - 10 && distance >= 0) {
 			//recv(sConnect, test, sizeof(test), 0);
-			if (test_count > 30) {
+			if (test_count > 25) {
 				cout << "/******************************/received : " << endl;
 			}
 			test_count++;
@@ -1172,7 +1806,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 			++index;
 			change_flag = 0;
 		}
-		
+
 		//break;
 		//----------------
 
@@ -1199,7 +1833,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 skin_img:經過HSV 篩選出的圖片
 image:原來的圖片
 */
-int contourFilter(Mat image, Mat skin_img,int* middle)
+int contourFilter(Mat image, Mat skin_img, int* middle)
 {
 	RNG rng(12345);//random number generator
 	Mat threshold_img;
