@@ -228,7 +228,6 @@ void CStereoProjectDlg::OnBnClickedButton1()
 	/*
 	CString szFileName=0;
 	CFileDialog JPGDlg(TRUE);
-
 	JPGDlg.DoModal(); //開啟選單
 	szFileName = JPGDlg.GetPathName();	//獲得圖片路徑
 	CT2A filename(szFileName);
@@ -729,6 +728,8 @@ void CStereoProjectDlg::OnBnClickedButton3()
 
 		cv::Mat frame;
 
+		int inputoption = 1;
+
 		for (;;) {
 			if (cap.grab() && !img_object.empty()) {
 				t = (double)cv::getTickCount();
@@ -742,22 +743,22 @@ void CStereoProjectDlg::OnBnClickedButton3()
 					int reacNum = -1;
 					output = 0;
 					cv::Mat LImage, img_scene;
-					cv::Rect Lrect(0, 0, 640,480);
+					cv::Rect Lrect(0, 0, 640, 480);
 					frame(Lrect).copyTo(LImage);
 					//cv::cvtColor(LImage, greyLImage, CV_BGR2GRAY);
 
 					cv::cvtColor(LImage, img_scene, CV_BGR2GRAY);
-					
-					cv::Mat greyFrame(1280,480, CV_8UC3);
-					cv::Mat LImage2(1280,480, CV_8UC3);
-					cv::Mat tmp(1280,480, CV_8UC3);
+
+					cv::Mat greyFrame(1280, 480, CV_8UC3);
+					cv::Mat LImage2(1280, 480, CV_8UC3);
+					cv::Mat tmp(1280, 480, CV_8UC3);
 					/*
 					frame(Lrect2).copyTo(LImage2);
 					cv::cvtColor(LImage2, greyFrame, CV_BGR2GRAY);
 					*/
 
-					cv::Rect Lrect2(0, 0, 640,480);
-					cv::Rect Lrect3(0, 0, 640,480);
+					cv::Rect Lrect2(0, 0, 640, 480);
+					cv::Rect Lrect3(0, 0, 640, 480);
 					Mat matDst(Size(frame(Lrect2).cols * 2, frame(Lrect2).rows), frame(Lrect2).type(), Scalar::all(0));
 					Mat matRoi = matDst(Rect(0, 0, frame(Lrect2).cols, frame(Lrect2).rows));
 					frame(Lrect2).copyTo(matRoi);
@@ -768,15 +769,24 @@ void CStereoProjectDlg::OnBnClickedButton3()
 					cv::cvtColor(matDst, greyFrame, 0);
 
 					if (method == 0) { //-- ORB
+						if(inputoption == 1)
+						{ 
 						orb.detect(img_scene, keypoints_scene);
 						orb.compute(img_scene, keypoints_scene, descriptors_scene);
+						}
 						// ======================= img2 ======================
-						orb2.detect(img_scene, keypoints_scene2);
-						orb2.compute(img_scene, keypoints_scene2, descriptors_scene2);
+						if (inputoption == 2)
+						{
+							orb2.detect(img_scene, keypoints_scene2);
+							orb2.compute(img_scene, keypoints_scene2, descriptors_scene2);
+						}
 						// ====================================================
 						// ======================= img3 ======================
-						orb3.detect(img_scene, keypoints_scene3);
-						orb3.compute(img_scene, keypoints_scene3, descriptors_scene3);
+						if (inputoption == 3)
+						{
+							orb3.detect(img_scene, keypoints_scene3);
+							orb3.compute(img_scene, keypoints_scene3, descriptors_scene3);
+						}
 						// ====================================================
 						// ======================= img4 ======================
 						if (userpic1 == 1) {
@@ -850,7 +860,7 @@ void CStereoProjectDlg::OnBnClickedButton3()
 
 					// ====================================================
 
-					if (!descriptors_object.empty() && !descriptors_scene.empty()) {
+					if (inputoption == 1&&!descriptors_object.empty() && !descriptors_scene.empty()) {
 						matcher.match(descriptors_object, descriptors_scene, matches);
 
 						//output = 0;
@@ -960,13 +970,18 @@ void CStereoProjectDlg::OnBnClickedButton3()
 									reacNum = 65304;
 								}
 
+								double check = (scene_corners[1].x - scene_corners[0].x);
+
+								if (check>10)//消除雜訊用
+									cout << (double)(scene_corners[0].x + scene_corners[1].x) / 2 << endl;
+
 							}
 						}
 					}
 
 					// ============================ img2 ====================
 
-					if (!descriptors_object2.empty() && !descriptors_scene2.empty()) {
+					if (inputoption == 2 && !descriptors_object2.empty() && !descriptors_scene2.empty()) {
 						matcher2.match(descriptors_object2, descriptors_scene2, matches2);
 
 						//output = 0;
@@ -1084,7 +1099,7 @@ void CStereoProjectDlg::OnBnClickedButton3()
 					// =====================================================
 					// ============================ img3 ====================
 
-					if (!descriptors_object3.empty() && !descriptors_scene3.empty()) {
+					if (inputoption == 3 && !descriptors_object3.empty() && !descriptors_scene3.empty()) {
 						matcher3.match(descriptors_object3, descriptors_scene3, matches3);
 
 						//output = 0;
@@ -1454,7 +1469,7 @@ void CStereoProjectDlg::OnBnClickedButton3()
 						1.0,                    // 字体大小
 						cv::Scalar(255, 255, 255));           // 字体颜色
 
-					if(reacNum == -1)
+					if (reacNum == -1)
 						sprintf(reacString, " ");      // 帧率保留两位小数
 					else
 						sprintf(reacString, "%d", reacNum);      // 帧率保留两位小数
@@ -1478,22 +1493,22 @@ void CStereoProjectDlg::OnBnClickedButton3()
 						cv::FONT_HERSHEY_SIMPLEX,   // 字体类型
 						0.5,                    // 字体大小
 						cv::Scalar(255, 255, 255));           // 字体颜色
-					/*
-					if (!img_matches.empty())
-						cv::imshow("match result", img_matches);
-					if (!img_matches2.empty())
-						cv::imshow("match result2", img_matches2);
-					if (!img_matches3.empty())
-						cv::imshow("match result3", img_matches3);
-					if (userpic1 == 1 && !img_matches4.empty())
-						cv::imshow("match result4", img_matches4);
-					if (userpic2 == 1 && !img_matches5.empty())
-						cv::imshow("match result5", img_matches5);
-					*/
+															  /*
+															  if (!img_matches.empty())
+															  cv::imshow("match result", img_matches);
+															  if (!img_matches2.empty())
+															  cv::imshow("match result2", img_matches2);
+															  if (!img_matches3.empty())
+															  cv::imshow("match result3", img_matches3);
+															  if (userpic1 == 1 && !img_matches4.empty())
+															  cv::imshow("match result4", img_matches4);
+															  if (userpic2 == 1 && !img_matches5.empty())
+															  cv::imshow("match result5", img_matches5);
+															  */
 					if (!greyFrame.empty())
 						cv::imshow("Match result", greyFrame);
-					
-					
+
+
 					// screen shot
 					Sleep(5); // Sleep is mandatory - for no leg!
 
@@ -1547,7 +1562,7 @@ void CStereoProjectDlg::OnBnClickedButton3()
 			}
 			//if (cv::waitKey(30) >= 0) break;
 		}
-	
+
 	}
 }
 
@@ -1835,7 +1850,6 @@ void CStereoProjectDlg::OnBnClickedButton5()
 			{
 			line(imgLines, Point(posX, posY), Point(iLastX, iLastY), Scalar(0, 0, 255), 2);
 			}
-
 			iLastX = posX;
 			iLastY = posY;*/
 
@@ -1858,7 +1872,6 @@ void CStereoProjectDlg::OnBnClickedButton5()
 			int SSD = 0;
 			for (int i = 0; i < arraySize; i++)
 			SSD += (array1[i] - array2[i])*(array1[i] - array2[i]);
-
 			*/
 			//==================
 
