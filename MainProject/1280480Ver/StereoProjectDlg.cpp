@@ -728,11 +728,25 @@ void CStereoProjectDlg::OnBnClickedButton3()
 
 		cv::Mat frame;
 
-		int inputoption = 3;
+		int inputoption = 1;
 		double TempNumber[5] = { 0 ,0,0,0,0};
 		int count=0;//記得每次change也要歸零
 		double PreviousFind=0;
+		char message[1000];
+		int findflag=-2;//-2表示沒找到
+		int sendcount=0;
 		for (;;) {
+
+			if (findflag == -2) {
+				sprintf(message, "-3,-1");
+				sendcount = 0;
+			}
+			else if(sendcount++<15)
+			{
+				sprintf(message, "**************-4,%d",findflag);
+				if (sendcount == 14) { findflag = -2; sendcount = 0;}
+			}
+
 			if (cap.grab() && !img_object.empty()) {
 				t = (double)cv::getTickCount();
 				cap.retrieve(frame, 0);
@@ -980,19 +994,24 @@ void CStereoProjectDlg::OnBnClickedButton3()
 									if (count == 4) {
 										double difference = (TempNumber[0] - TempNumber[1]) + (TempNumber[0] - TempNumber[2]) + (TempNumber[0] - TempNumber[3]);
 										//cout << TempNumber[0] << " , " << TempNumber[1] << " , " << TempNumber[2] << " , " << TempNumber[3] << " , " << TempNumber[4] << endl;
+										
 										if (difference < 20 && difference >-20)
 										{
-											PreviousFind = (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4;
-											cout << "find，Position=" << (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4 << endl;
+											double NowPosition = (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4;
+											//cout << "find，Position=" << NowPosition << endl;
+											if (NowPosition < 150 && NowPosition>0){
+												findflag = -1;
+												//sprintf(message, "*******************************-4,-1");
+											}
+											else if (NowPosition >250  && NowPosition<400){
+												findflag = 0;
+												//sprintf(message, "*******************************-4,0");
+											}
+											else if (NowPosition < 640 && NowPosition>500){
+												findflag = 1;
+												//sprintf(message, "*******************************-4,1");
+											}
 										}
-										/*
-										if (PreviousFind != 0) {
-										double NowFind = (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4;
-										if((NowFind- PreviousFind)<70&& (NowFind - PreviousFind)>70)
-										cout << "find，Position=" << NowFind / (double)4 << endl;
-
-										}
-										*/
 										count = 0;
 									}
 									//cout << (double)(scene_corners[0].x + scene_corners[1].x) / 2 << endl;
@@ -1581,6 +1600,8 @@ void CStereoProjectDlg::OnBnClickedButton3()
 															  */
 					if (!greyFrame.empty())
 						cv::imshow("Match result", greyFrame);
+Labelsend:
+					cout << message<<endl;
 
 
 					// screen shot
