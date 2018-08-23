@@ -625,6 +625,7 @@ void CStereoProjectDlg::OnBnClickedButton3()
 	for (;;) {
 		if (cap.grab() && !img_object.empty()) {
 
+
 			t = (double)cv::getTickCount();
 			cap.retrieve(frame, 0);
 
@@ -867,7 +868,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 	CString szFileName = 0;
 
-	cv::VideoCapture video(1);	// org: 640 * 480
+	cv::VideoCapture video(0);	// org: 640 * 480
 
 	video.set(CV_CAP_PROP_FRAME_WIDTH, CameraSizeW * 2);
 	video.set(CV_CAP_PROP_FRAME_HEIGHT, CameraSizeH);
@@ -926,6 +927,7 @@ void CStereoProjectDlg::OnBnClickedButton5()
 	int mode = 0;
 	int test_count = 0;
 	int change_flag = 0;
+	int NumberRecog = 0;
 
 	//開始 Winsock-DLL
 	int r;
@@ -962,7 +964,11 @@ void CStereoProjectDlg::OnBnClickedButton5()
 	//-------------------
 	int index = 0;//HSV index 目前跑到第幾趟
 
-				  //=======數字辨識部分宣告===
+	//=======數字辨識部分宣告===
+	double TempNumber[5] = {0,0,0,0,0 };
+	int tempcount = 0;//記得每次change也要歸零
+	int findflag = -2;//-2表示沒找到
+	int sendcount = 0;
 
 	int output = 0;
 	int  userpic1 = 0, userpic2 = 0; // For filename
@@ -1280,8 +1286,23 @@ void CStereoProjectDlg::OnBnClickedButton5()
 			}*/
 		}
 		//=================以上是偵測顏色距離 這裡開始辨識數字
-		if ((index % 2) != 0)//如果是回程才要辨識數字
+		if ((index % 2) != 0&& NumberRecog==1)//如果是回程而且到正確位置才要辨識數字
 		{
+			if (findflag == -2) {
+				//sprintf(message, "-3,-1");
+				distance = -3;
+				middleL = 50;
+				sendcount = 0;
+			}
+			else if (sendcount++<15)
+			{
+				//sprintf(message, "**************-4,%d", findflag);
+				cout << "****************************findNumber" << endl;
+				distance = -4;
+				middleL = findflag;
+				//把所有變數歸零並change顏色
+				if (sendcount == 14) { findflag = -2; sendcount = 0; NumberRecog = 0; tempcount = 0; ++index;}
+			}
 
 			//8/20
 			//cv::resize(frame, frame, cv::Size(640, 240), CV_INTER_AREA);
@@ -1512,12 +1533,37 @@ void CStereoProjectDlg::OnBnClickedButton5()
 							output = 1;
 							reacNum = 65304;
 						}
+						double check = (scene_corners[1].x - scene_corners[0].x);
+						if (check > 10)//消除雜訊用
+						{
+							TempNumber[tempcount++] = (double)(scene_corners[0].x + scene_corners[1].x) / 2;
+							if (tempcount == 4) {
+								double difference = (TempNumber[0] - TempNumber[1]) + (TempNumber[0] - TempNumber[2]) + (TempNumber[0] - TempNumber[3]);
+								//cout << TempNumber[0] << " , " << TempNumber[1] << " , " << TempNumber[2] << " , " << TempNumber[3] << " , " << TempNumber[4] << endl;
+
+								if (difference < 20 && difference >-20)
+								{
+									double NowPosition = (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4;
+									//cout << "find，Position=" << NowPosition << endl;
+									if (NowPosition < 150 && NowPosition>0) {
+										findflag = -1;
+										//sprintf(message, "*******************************-4,-1");
+									}
+									else if (NowPosition >250 && NowPosition<400) {
+										findflag = 0;
+										//sprintf(message, "*******************************-4,0");
+									}
+									else if (NowPosition < 640 && NowPosition>500) {
+										findflag = 1;
+										//sprintf(message, "*******************************-4,1");
+									}
+								}
+								tempcount = 0;
+							}
+							//cout << (double)(scene_corners[0].x + scene_corners[1].x) / 2 << endl;
+						}
 
 					}
-					double check = (scene_corners[1].x - scene_corners[0].x);
-					if (check>10)//消除雜訊用
-								 //cout << (double)(scene_corners[0].x + scene_corners[1].x) / 2 << endl;
-						middleL = (int)(scene_corners[0].x + scene_corners[1].x) / 2;
 				}
 			}
 
@@ -1636,9 +1682,35 @@ void CStereoProjectDlg::OnBnClickedButton5()
 						}
 					}
 					double check = (scene_corners[1].x - scene_corners[0].x);
-					if (check>10)//消除雜訊用
-								 //cout << (double)(scene_corners[0].x + scene_corners[1].x) / 2 << endl;
-						middleL = (int)(scene_corners[0].x + scene_corners[1].x) / 2;
+
+					if (check > 10)//消除雜訊用
+					{
+						TempNumber[tempcount++] = (double)(scene_corners[0].x + scene_corners[1].x) / 2;
+						if (tempcount == 4) {
+							double difference = (TempNumber[0] - TempNumber[1]) + (TempNumber[0] - TempNumber[2]) + (TempNumber[0] - TempNumber[3]);
+							//cout << TempNumber[0] << " , " << TempNumber[1] << " , " << TempNumber[2] << " , " << TempNumber[3] << " , " << TempNumber[4] << endl;
+
+							if (difference < 20 && difference >-20)
+							{
+								double NowPosition = (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4;
+								//cout << "find，Position=" << NowPosition << endl;
+								if (NowPosition < 150 && NowPosition>0) {
+									findflag = -1;
+									//sprintf(message, "*******************************-4,-1");
+								}
+								else if (NowPosition >250 && NowPosition<400) {
+									findflag = 0;
+									//sprintf(message, "*******************************-4,0");
+								}
+								else if (NowPosition < 640 && NowPosition>500) {
+									findflag = 1;
+									//sprintf(message, "*******************************-4,1");
+								}
+							}
+							tempcount = 0;
+						}
+						//cout << (double)(scene_corners[0].x + scene_corners[1].x) / 2 << endl;
+					}
 				}
 			}
 
@@ -1760,9 +1832,35 @@ void CStereoProjectDlg::OnBnClickedButton5()
 
 
 					double check = (scene_corners[1].x - scene_corners[0].x);
-					if (check>10)//消除雜訊用
-								 //cout << (double)(scene_corners[0].x + scene_corners[1].x) / 2 << endl;
-						middleL = (int)(scene_corners[0].x + scene_corners[1].x) / 2;
+
+					if (check > 10)//消除雜訊用
+					{
+						TempNumber[tempcount++] = (double)(scene_corners[0].x + scene_corners[1].x) / 2;
+						if (tempcount == 4) {
+							double difference = (TempNumber[0] - TempNumber[1]) + (TempNumber[0] - TempNumber[2]) + (TempNumber[0] - TempNumber[3]);
+							//cout << TempNumber[0] << " , " << TempNumber[1] << " , " << TempNumber[2] << " , " << TempNumber[3] << " , " << TempNumber[4] << endl;
+
+							if (difference < 20 && difference >-20)
+							{
+								double NowPosition = (TempNumber[0] + TempNumber[1] + TempNumber[2] + TempNumber[3]) / (double)4;
+								//cout << "find，Position=" << NowPosition << endl;
+								if (NowPosition < 150 && NowPosition>0) {
+									findflag = -1;
+									//sprintf(message, "*******************************-4,-1");
+								}
+								else if (NowPosition >250 && NowPosition<400) {
+									findflag = 0;
+									//sprintf(message, "*******************************-4,0");
+								}
+								else if (NowPosition < 640 && NowPosition>500) {
+									findflag = 1;
+									//sprintf(message, "*******************************-4,1");
+								}
+							}
+							tempcount = 0;
+						}
+						//cout << (double)(scene_corners[0].x + scene_corners[1].x) / 2 << endl;
+					}
 
 				}
 			}
@@ -1783,6 +1881,8 @@ void CStereoProjectDlg::OnBnClickedButton5()
 		send(sConnect, message, (int)strlen(message), 0);
 		char test[50];
 		memset(test, 0, sizeof(test));
+
+		if(index%2==0&& NumberRecog==0){//去程的change機制
 
 		if (distance > 37 && middleL <= 320 && middleL >= 300) {
 			//recv(sConnect, test, sizeof(test), 0);
@@ -1806,8 +1906,20 @@ void CStereoProjectDlg::OnBnClickedButton5()
 			++index;
 			change_flag = 0;
 		}
+		}
+		else if(NumberRecog==0){//不能在偵測數字的階段change
+			if (distance > 37 && middleL <= 320 && middleL >= 300) {
+				test_count = 0;
+			}
+			if (distance <= 37 && middleL <= 315 + 10 && middleL >= 315 - 10 && distance >= 0) {
+				if (test_count > 25) {//累積25次偵測到正確位置，表示已經到定位
+					cout << "/******************************CHANGE Start Number Recog***************************/" << endl;
+					NumberRecog = 1;//開始偵測數字的flag
+				}
+				test_count++;
+			}
+		}
 
-		//break;
 		//----------------
 
 		// Show the Thresholded Image
